@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const createPortalAccess = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { orderId: string }) => {
+  .validator((d: { orderId: string }) => {
     if (!d?.orderId || typeof d.orderId !== "string") throw new Error("orderId inválido");
     return d;
   })
@@ -20,7 +20,7 @@ export const createPortalAccess = createServerFn({ method: "POST" })
 
 export const getPortalAccessInfo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { orderId: string }) => d)
+  .validator((d: { orderId: string }) => d)
   .handler(async ({ data, context }) => {
     // Verify caller's company owns the order (RLS-scoped read).
     const { data: order, error: oe } = await context.supabase

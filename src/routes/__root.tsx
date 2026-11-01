@@ -55,7 +55,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#04232c" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "LabIS" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { title: "LIS — Sistema de Gestão Laboratorial" },
       { name: "description", content: "Sistema de gestão para laboratório de análises clínicas: cadastros, pedidos e coletas." },
       { property: "og:title", content: "LIS — Sistema de Gestão Laboratorial" },
@@ -73,6 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -93,6 +101,11 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  // PWA: registra o service worker (só em produção e fora de iframes, ex.: editor do Lovable)
+  useEffect(() => {
+    if (!import.meta.env.PROD || !("serviceWorker" in navigator) || window.self !== window.top) return;
+    navigator.serviceWorker.register("/sw.js").catch((err) => console.warn("[pwa] sw:", err));
+  }, []);
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;

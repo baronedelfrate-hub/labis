@@ -1,10 +1,11 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
   FlaskConical, LayoutDashboard, ClipboardList, Plus, Users, Stethoscope,
   ShieldCheck, Building2, Tags, TestTubes, Layers, LogOut, ChevronRight, UserCog,
-  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt,
+  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -49,12 +50,18 @@ function AuthedLayout() {
   const location = useLocation();
   const qc = useQueryClient();
   const [email, setEmail] = useState<string>("");
+  const [menuOpen, setMenuOpen] = useState(false);
   const isAdmin = useIsAdmin();
   const myRoles = useMyRoles();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
   }, []);
+
+  // Fecha a gaveta do menu ao navegar (celular)
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const signOut = async () => {
     await qc.cancelQueries();
@@ -65,9 +72,8 @@ function AuthedLayout() {
 
   const isActive = (to: string) => location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
 
-  return (
-    <div className="min-h-screen flex bg-background">
-      <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col">
+  const sidebar = (
+      <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex items-center gap-2 border-b border-sidebar-border">
           <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
           <span className="font-semibold">LabIS</span>
@@ -149,10 +155,35 @@ function AuthedLayout() {
             <LogOut className="size-4 mr-2" />Sair
           </Button>
         </div>
-      </aside>
-      <main className="flex-1 min-w-0 overflow-x-hidden">
-        <Outlet />
-      </main>
+      </div>
+  );
+
+  return (
+    <div className="min-h-screen flex bg-background">
+      {/* Computador: menu fixo na lateral */}
+      <aside className="hidden md:flex w-60 shrink-0 sticky top-0 h-screen">{sidebar}</aside>
+
+      {/* Celular: menu em gaveta, aberto pelo botão ☰ */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" className="w-64 max-w-[80vw] border-0 bg-sidebar p-0 text-sidebar-foreground md:hidden [&>button]:text-sidebar-foreground">
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetDescription className="sr-only">Navegação do sistema</SheetDescription>
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="md:hidden sticky top-0 z-30 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-sidebar-foreground">
+          <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMenuOpen(true)} aria-label="Abrir menu">
+            <Menu className="size-5" />
+          </Button>
+          <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
+          <span className="font-semibold">LabIS</span>
+        </header>
+        <main className="flex-1 min-w-0 overflow-x-hidden">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

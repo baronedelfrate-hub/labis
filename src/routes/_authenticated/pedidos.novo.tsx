@@ -170,7 +170,7 @@ function NewOrder() {
               <h2 className="text-sm font-semibold">Exames</h2>
               <span className="text-xs text-muted-foreground">Tabela: {insurance?.name ?? "—"}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <ExamPicker onPick={addExam} />
               <GroupPicker onPick={addGroup} />
             </div>

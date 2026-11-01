@@ -9,39 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PortalRouteImport } from './routes/portal'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PortalLaudoRouteImport } from './routes/portal_.laudo'
-import { Route as AuthenticatedResultadosRouteImport } from './routes/_authenticated/resultados'
-import { Route as AuthenticatedLiberacaoRouteImport } from './routes/_authenticated/liberacao'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as AuthenticatedColetaRouteImport } from './routes/_authenticated/coleta'
-import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
-import { Route as AuthenticatedFinanceiroIndexRouteImport } from './routes/_authenticated/financeiro.index'
-import { Route as ApiPublicPortalLoginRouteImport } from './routes/api/public/portal-login'
-import { Route as ApiPublicPortalLaudoRouteImport } from './routes/api/public/portal-laudo'
-import { Route as AuthenticatedPedidosNovoRouteImport } from './routes/_authenticated/pedidos.novo'
-import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
-import { Route as AuthenticatedFinanceiroConveniosRouteImport } from './routes/_authenticated/financeiro.convenios'
-import { Route as AuthenticatedCadastrosUsuariosRouteImport } from './routes/_authenticated/cadastros.usuarios'
-import { Route as AuthenticatedCadastrosUnidadesRouteImport } from './routes/_authenticated/cadastros.unidades'
-import { Route as AuthenticatedCadastrosTabelasPrecoRouteImport } from './routes/_authenticated/cadastros.tabelas-preco'
-import { Route as AuthenticatedCadastrosPacientesRouteImport } from './routes/_authenticated/cadastros.pacientes'
-import { Route as AuthenticatedCadastrosMedicosRouteImport } from './routes/_authenticated/cadastros.medicos'
-import { Route as AuthenticatedCadastrosGruposExamesRouteImport } from './routes/_authenticated/cadastros.grupos-exames'
-import { Route as AuthenticatedCadastrosExamesRouteImport } from './routes/_authenticated/cadastros.exames'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedLiberacaoRouteImport } from './routes/_authenticated/liberacao'
+import { Route as AuthenticatedResultadosRouteImport } from './routes/_authenticated/resultados'
+import { Route as PortalLaudoRouteImport } from './routes/portal_.laudo'
 import { Route as AuthenticatedCadastrosConveniosRouteImport } from './routes/_authenticated/cadastros.convenios'
+import { Route as AuthenticatedCadastrosExamesRouteImport } from './routes/_authenticated/cadastros.exames'
+import { Route as AuthenticatedCadastrosGruposExamesRouteImport } from './routes/_authenticated/cadastros.grupos-exames'
+import { Route as AuthenticatedCadastrosMedicosRouteImport } from './routes/_authenticated/cadastros.medicos'
+import { Route as AuthenticatedCadastrosPacientesRouteImport } from './routes/_authenticated/cadastros.pacientes'
+import { Route as AuthenticatedCadastrosTabelasPrecoRouteImport } from './routes/_authenticated/cadastros.tabelas-preco'
+import { Route as AuthenticatedCadastrosUnidadesRouteImport } from './routes/_authenticated/cadastros.unidades'
+import { Route as AuthenticatedCadastrosUsuariosRouteImport } from './routes/_authenticated/cadastros.usuarios'
+import { Route as AuthenticatedFinanceiroIndexRouteImport } from './routes/_authenticated/financeiro.index'
+import { Route as AuthenticatedFinanceiroConveniosRouteImport } from './routes/_authenticated/financeiro.convenios'
+import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
+import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
+import { Route as AuthenticatedPedidosNovoRouteImport } from './routes/_authenticated/pedidos.novo'
+import { Route as ApiPublicPortalLaudoRouteImport } from './routes/api/public/portal-laudo'
+import { Route as ApiPublicPortalLoginRouteImport } from './routes/api/public/portal-login'
 import { Route as AuthenticatedFinanceiroLotesIndexRouteImport } from './routes/_authenticated/financeiro.lotes.index'
-import { Route as AuthenticatedPedidosOrderIdLaudoRouteImport } from './routes/_authenticated/pedidos.$orderId_.laudo'
-import { Route as AuthenticatedPedidosOrderIdComprovanteRouteImport } from './routes/_authenticated/pedidos.$orderId_.comprovante'
 import { Route as AuthenticatedFinanceiroLotesBatchIdRouteImport } from './routes/_authenticated/financeiro.lotes.$batchId'
+import { Route as AuthenticatedPedidosOrderIdComprovanteRouteImport } from './routes/_authenticated/pedidos.$orderId_.comprovante'
+import { Route as AuthenticatedPedidosOrderIdLaudoRouteImport } from './routes/_authenticated/pedidos.$orderId_.laudo'
 
-const PortalRoute = PortalRouteImport.update({
-  id: '/portal',
-  path: '/portal',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -49,33 +53,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalLaudoRoute = PortalLaudoRouteImport.update({
-  id: '/portal_/laudo',
-  path: '/portal/laudo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedResultadosRoute = AuthenticatedResultadosRouteImport.update({
-  id: '/resultados',
-  path: '/resultados',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLiberacaoRoute = AuthenticatedLiberacaoRouteImport.update({
-  id: '/liberacao',
-  path: '/liberacao',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedColetaRoute = AuthenticatedColetaRouteImport.update({
+  id: '/coleta',
+  path: '/coleta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracoesRoute =
@@ -84,85 +69,30 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedColetaRoute = AuthenticatedColetaRouteImport.update({
-  id: '/coleta',
-  path: '/coleta',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPedidosIndexRoute =
-  AuthenticatedPedidosIndexRouteImport.update({
-    id: '/pedidos/',
-    path: '/pedidos/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedFinanceiroIndexRoute =
-  AuthenticatedFinanceiroIndexRouteImport.update({
-    id: '/financeiro/',
-    path: '/financeiro/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const ApiPublicPortalLoginRoute = ApiPublicPortalLoginRouteImport.update({
-  id: '/api/public/portal-login',
-  path: '/api/public/portal-login',
+const AuthenticatedLiberacaoRoute = AuthenticatedLiberacaoRouteImport.update({
+  id: '/liberacao',
+  path: '/liberacao',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedResultadosRoute = AuthenticatedResultadosRouteImport.update({
+  id: '/resultados',
+  path: '/resultados',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const PortalLaudoRoute = PortalLaudoRouteImport.update({
+  id: '/portal_/laudo',
+  path: '/portal/laudo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPortalLaudoRoute = ApiPublicPortalLaudoRouteImport.update({
-  id: '/api/public/portal-laudo',
-  path: '/api/public/portal-laudo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedPedidosNovoRoute =
-  AuthenticatedPedidosNovoRouteImport.update({
-    id: '/pedidos/novo',
-    path: '/pedidos/novo',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPedidosOrderIdRoute =
-  AuthenticatedPedidosOrderIdRouteImport.update({
-    id: '/pedidos/$orderId',
-    path: '/pedidos/$orderId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedFinanceiroConveniosRoute =
-  AuthenticatedFinanceiroConveniosRouteImport.update({
-    id: '/financeiro/convenios',
-    path: '/financeiro/convenios',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosUsuariosRoute =
-  AuthenticatedCadastrosUsuariosRouteImport.update({
-    id: '/cadastros/usuarios',
-    path: '/cadastros/usuarios',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosUnidadesRoute =
-  AuthenticatedCadastrosUnidadesRouteImport.update({
-    id: '/cadastros/unidades',
-    path: '/cadastros/unidades',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosTabelasPrecoRoute =
-  AuthenticatedCadastrosTabelasPrecoRouteImport.update({
-    id: '/cadastros/tabelas-preco',
-    path: '/cadastros/tabelas-preco',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosPacientesRoute =
-  AuthenticatedCadastrosPacientesRouteImport.update({
-    id: '/cadastros/pacientes',
-    path: '/cadastros/pacientes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosMedicosRoute =
-  AuthenticatedCadastrosMedicosRouteImport.update({
-    id: '/cadastros/medicos',
-    path: '/cadastros/medicos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedCadastrosGruposExamesRoute =
-  AuthenticatedCadastrosGruposExamesRouteImport.update({
-    id: '/cadastros/grupos-exames',
-    path: '/cadastros/grupos-exames',
+const AuthenticatedCadastrosConveniosRoute =
+  AuthenticatedCadastrosConveniosRouteImport.update({
+    id: '/cadastros/convenios',
+    path: '/cadastros/convenios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCadastrosExamesRoute =
@@ -171,22 +101,92 @@ const AuthenticatedCadastrosExamesRoute =
     path: '/cadastros/exames',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCadastrosConveniosRoute =
-  AuthenticatedCadastrosConveniosRouteImport.update({
-    id: '/cadastros/convenios',
-    path: '/cadastros/convenios',
+const AuthenticatedCadastrosGruposExamesRoute =
+  AuthenticatedCadastrosGruposExamesRouteImport.update({
+    id: '/cadastros/grupos-exames',
+    path: '/cadastros/grupos-exames',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCadastrosMedicosRoute =
+  AuthenticatedCadastrosMedicosRouteImport.update({
+    id: '/cadastros/medicos',
+    path: '/cadastros/medicos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastrosPacientesRoute =
+  AuthenticatedCadastrosPacientesRouteImport.update({
+    id: '/cadastros/pacientes',
+    path: '/cadastros/pacientes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastrosTabelasPrecoRoute =
+  AuthenticatedCadastrosTabelasPrecoRouteImport.update({
+    id: '/cadastros/tabelas-preco',
+    path: '/cadastros/tabelas-preco',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastrosUnidadesRoute =
+  AuthenticatedCadastrosUnidadesRouteImport.update({
+    id: '/cadastros/unidades',
+    path: '/cadastros/unidades',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastrosUsuariosRoute =
+  AuthenticatedCadastrosUsuariosRouteImport.update({
+    id: '/cadastros/usuarios',
+    path: '/cadastros/usuarios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinanceiroIndexRoute =
+  AuthenticatedFinanceiroIndexRouteImport.update({
+    id: '/financeiro/',
+    path: '/financeiro/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedFinanceiroConveniosRoute =
+  AuthenticatedFinanceiroConveniosRouteImport.update({
+    id: '/financeiro/convenios',
+    path: '/financeiro/convenios',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosIndexRoute =
+  AuthenticatedPedidosIndexRouteImport.update({
+    id: '/pedidos/',
+    path: '/pedidos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosOrderIdRoute =
+  AuthenticatedPedidosOrderIdRouteImport.update({
+    id: '/pedidos/$orderId',
+    path: '/pedidos/$orderId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPedidosNovoRoute =
+  AuthenticatedPedidosNovoRouteImport.update({
+    id: '/pedidos/novo',
+    path: '/pedidos/novo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicPortalLaudoRoute = ApiPublicPortalLaudoRouteImport.update({
+  id: '/api/public/portal-laudo',
+  path: '/api/public/portal-laudo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPortalLoginRoute = ApiPublicPortalLoginRouteImport.update({
+  id: '/api/public/portal-login',
+  path: '/api/public/portal-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedFinanceiroLotesIndexRoute =
   AuthenticatedFinanceiroLotesIndexRouteImport.update({
     id: '/financeiro/lotes/',
     path: '/financeiro/lotes/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPedidosOrderIdLaudoRoute =
-  AuthenticatedPedidosOrderIdLaudoRouteImport.update({
-    id: '/pedidos/$orderId_/laudo',
-    path: '/pedidos/$orderId/laudo',
+const AuthenticatedFinanceiroLotesBatchIdRoute =
+  AuthenticatedFinanceiroLotesBatchIdRouteImport.update({
+    id: '/financeiro/lotes/$batchId',
+    path: '/financeiro/lotes/$batchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPedidosOrderIdComprovanteRoute =
@@ -195,10 +195,10 @@ const AuthenticatedPedidosOrderIdComprovanteRoute =
     path: '/pedidos/$orderId/comprovante',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedFinanceiroLotesBatchIdRoute =
-  AuthenticatedFinanceiroLotesBatchIdRouteImport.update({
-    id: '/financeiro/lotes/$batchId',
-    path: '/financeiro/lotes/$batchId',
+const AuthenticatedPedidosOrderIdLaudoRoute =
+  AuthenticatedPedidosOrderIdLaudoRouteImport.update({
+    id: '/pedidos/$orderId_/laudo',
+    path: '/pedidos/$orderId/laudo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -400,18 +400,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/portal': {
-      id: '/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof PortalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -421,39 +414,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/portal_/laudo': {
-      id: '/portal_/laudo'
-      path: '/portal/laudo'
-      fullPath: '/portal/laudo'
-      preLoaderRoute: typeof PortalLaudoRouteImport
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/resultados': {
-      id: '/_authenticated/resultados'
-      path: '/resultados'
-      fullPath: '/resultados'
-      preLoaderRoute: typeof AuthenticatedResultadosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/liberacao': {
-      id: '/_authenticated/liberacao'
-      path: '/liberacao'
-      fullPath: '/liberacao'
-      preLoaderRoute: typeof AuthenticatedLiberacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/coleta': {
+      id: '/_authenticated/coleta'
+      path: '/coleta'
+      fullPath: '/coleta'
+      preLoaderRoute: typeof AuthenticatedColetaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/configuracoes': {
@@ -463,102 +442,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/coleta': {
-      id: '/_authenticated/coleta'
-      path: '/coleta'
-      fullPath: '/coleta'
-      preLoaderRoute: typeof AuthenticatedColetaRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pedidos/': {
-      id: '/_authenticated/pedidos/'
-      path: '/pedidos'
-      fullPath: '/pedidos/'
-      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
+    '/_authenticated/liberacao': {
+      id: '/_authenticated/liberacao'
+      path: '/liberacao'
+      fullPath: '/liberacao'
+      preLoaderRoute: typeof AuthenticatedLiberacaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/financeiro/': {
-      id: '/_authenticated/financeiro/'
-      path: '/financeiro'
-      fullPath: '/financeiro/'
-      preLoaderRoute: typeof AuthenticatedFinanceiroIndexRouteImport
+    '/_authenticated/resultados': {
+      id: '/_authenticated/resultados'
+      path: '/resultados'
+      fullPath: '/resultados'
+      preLoaderRoute: typeof AuthenticatedResultadosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/portal-login': {
-      id: '/api/public/portal-login'
-      path: '/api/public/portal-login'
-      fullPath: '/api/public/portal-login'
-      preLoaderRoute: typeof ApiPublicPortalLoginRouteImport
+    '/portal_/laudo': {
+      id: '/portal_/laudo'
+      path: '/portal/laudo'
+      fullPath: '/portal/laudo'
+      preLoaderRoute: typeof PortalLaudoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/portal-laudo': {
-      id: '/api/public/portal-laudo'
-      path: '/api/public/portal-laudo'
-      fullPath: '/api/public/portal-laudo'
-      preLoaderRoute: typeof ApiPublicPortalLaudoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/pedidos/novo': {
-      id: '/_authenticated/pedidos/novo'
-      path: '/pedidos/novo'
-      fullPath: '/pedidos/novo'
-      preLoaderRoute: typeof AuthenticatedPedidosNovoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pedidos/$orderId': {
-      id: '/_authenticated/pedidos/$orderId'
-      path: '/pedidos/$orderId'
-      fullPath: '/pedidos/$orderId'
-      preLoaderRoute: typeof AuthenticatedPedidosOrderIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/financeiro/convenios': {
-      id: '/_authenticated/financeiro/convenios'
-      path: '/financeiro/convenios'
-      fullPath: '/financeiro/convenios'
-      preLoaderRoute: typeof AuthenticatedFinanceiroConveniosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/usuarios': {
-      id: '/_authenticated/cadastros/usuarios'
-      path: '/cadastros/usuarios'
-      fullPath: '/cadastros/usuarios'
-      preLoaderRoute: typeof AuthenticatedCadastrosUsuariosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/unidades': {
-      id: '/_authenticated/cadastros/unidades'
-      path: '/cadastros/unidades'
-      fullPath: '/cadastros/unidades'
-      preLoaderRoute: typeof AuthenticatedCadastrosUnidadesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/tabelas-preco': {
-      id: '/_authenticated/cadastros/tabelas-preco'
-      path: '/cadastros/tabelas-preco'
-      fullPath: '/cadastros/tabelas-preco'
-      preLoaderRoute: typeof AuthenticatedCadastrosTabelasPrecoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/pacientes': {
-      id: '/_authenticated/cadastros/pacientes'
-      path: '/cadastros/pacientes'
-      fullPath: '/cadastros/pacientes'
-      preLoaderRoute: typeof AuthenticatedCadastrosPacientesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/medicos': {
-      id: '/_authenticated/cadastros/medicos'
-      path: '/cadastros/medicos'
-      fullPath: '/cadastros/medicos'
-      preLoaderRoute: typeof AuthenticatedCadastrosMedicosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/cadastros/grupos-exames': {
-      id: '/_authenticated/cadastros/grupos-exames'
-      path: '/cadastros/grupos-exames'
-      fullPath: '/cadastros/grupos-exames'
-      preLoaderRoute: typeof AuthenticatedCadastrosGruposExamesRouteImport
+    '/_authenticated/cadastros/convenios': {
+      id: '/_authenticated/cadastros/convenios'
+      path: '/cadastros/convenios'
+      fullPath: '/cadastros/convenios'
+      preLoaderRoute: typeof AuthenticatedCadastrosConveniosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastros/exames': {
@@ -568,12 +484,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadastrosExamesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/cadastros/convenios': {
-      id: '/_authenticated/cadastros/convenios'
-      path: '/cadastros/convenios'
-      fullPath: '/cadastros/convenios'
-      preLoaderRoute: typeof AuthenticatedCadastrosConveniosRouteImport
+    '/_authenticated/cadastros/grupos-exames': {
+      id: '/_authenticated/cadastros/grupos-exames'
+      path: '/cadastros/grupos-exames'
+      fullPath: '/cadastros/grupos-exames'
+      preLoaderRoute: typeof AuthenticatedCadastrosGruposExamesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/medicos': {
+      id: '/_authenticated/cadastros/medicos'
+      path: '/cadastros/medicos'
+      fullPath: '/cadastros/medicos'
+      preLoaderRoute: typeof AuthenticatedCadastrosMedicosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/pacientes': {
+      id: '/_authenticated/cadastros/pacientes'
+      path: '/cadastros/pacientes'
+      fullPath: '/cadastros/pacientes'
+      preLoaderRoute: typeof AuthenticatedCadastrosPacientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/tabelas-preco': {
+      id: '/_authenticated/cadastros/tabelas-preco'
+      path: '/cadastros/tabelas-preco'
+      fullPath: '/cadastros/tabelas-preco'
+      preLoaderRoute: typeof AuthenticatedCadastrosTabelasPrecoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/unidades': {
+      id: '/_authenticated/cadastros/unidades'
+      path: '/cadastros/unidades'
+      fullPath: '/cadastros/unidades'
+      preLoaderRoute: typeof AuthenticatedCadastrosUnidadesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/usuarios': {
+      id: '/_authenticated/cadastros/usuarios'
+      path: '/cadastros/usuarios'
+      fullPath: '/cadastros/usuarios'
+      preLoaderRoute: typeof AuthenticatedCadastrosUsuariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro/': {
+      id: '/_authenticated/financeiro/'
+      path: '/financeiro'
+      fullPath: '/financeiro/'
+      preLoaderRoute: typeof AuthenticatedFinanceiroIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro/convenios': {
+      id: '/_authenticated/financeiro/convenios'
+      path: '/financeiro/convenios'
+      fullPath: '/financeiro/convenios'
+      preLoaderRoute: typeof AuthenticatedFinanceiroConveniosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/': {
+      id: '/_authenticated/pedidos/'
+      path: '/pedidos'
+      fullPath: '/pedidos/'
+      preLoaderRoute: typeof AuthenticatedPedidosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/$orderId': {
+      id: '/_authenticated/pedidos/$orderId'
+      path: '/pedidos/$orderId'
+      fullPath: '/pedidos/$orderId'
+      preLoaderRoute: typeof AuthenticatedPedidosOrderIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos/novo': {
+      id: '/_authenticated/pedidos/novo'
+      path: '/pedidos/novo'
+      fullPath: '/pedidos/novo'
+      preLoaderRoute: typeof AuthenticatedPedidosNovoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/portal-laudo': {
+      id: '/api/public/portal-laudo'
+      path: '/api/public/portal-laudo'
+      fullPath: '/api/public/portal-laudo'
+      preLoaderRoute: typeof ApiPublicPortalLaudoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal-login': {
+      id: '/api/public/portal-login'
+      path: '/api/public/portal-login'
+      fullPath: '/api/public/portal-login'
+      preLoaderRoute: typeof ApiPublicPortalLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/financeiro/lotes/': {
       id: '/_authenticated/financeiro/lotes/'
@@ -582,11 +582,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroLotesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/pedidos/$orderId_/laudo': {
-      id: '/_authenticated/pedidos/$orderId_/laudo'
-      path: '/pedidos/$orderId/laudo'
-      fullPath: '/pedidos/$orderId/laudo'
-      preLoaderRoute: typeof AuthenticatedPedidosOrderIdLaudoRouteImport
+    '/_authenticated/financeiro/lotes/$batchId': {
+      id: '/_authenticated/financeiro/lotes/$batchId'
+      path: '/financeiro/lotes/$batchId'
+      fullPath: '/financeiro/lotes/$batchId'
+      preLoaderRoute: typeof AuthenticatedFinanceiroLotesBatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedidos/$orderId_/comprovante': {
@@ -596,11 +596,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosOrderIdComprovanteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/financeiro/lotes/$batchId': {
-      id: '/_authenticated/financeiro/lotes/$batchId'
-      path: '/financeiro/lotes/$batchId'
-      fullPath: '/financeiro/lotes/$batchId'
-      preLoaderRoute: typeof AuthenticatedFinanceiroLotesBatchIdRouteImport
+    '/_authenticated/pedidos/$orderId_/laudo': {
+      id: '/_authenticated/pedidos/$orderId_/laudo'
+      path: '/pedidos/$orderId/laudo'
+      fullPath: '/pedidos/$orderId/laudo'
+      preLoaderRoute: typeof AuthenticatedPedidosOrderIdLaudoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }

@@ -74,7 +74,7 @@ export const listCompanyUsers = createServerFn({ method: "GET" })
 
 export const inviteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { email: string; role: Role }) => {
+  .validator((d: { email: string; role: Role }) => {
     if (!d?.email || !/.+@.+\..+/.test(d.email)) throw new Error("E-mail inválido");
     if (!["admin", "recepcao", "tecnico", "bioquimico"].includes(d.role)) throw new Error("Papel inválido");
     return { email: d.email.trim().toLowerCase(), role: d.role };
@@ -122,7 +122,7 @@ export const inviteUser = createServerFn({ method: "POST" })
 
 export const resendInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { invitationId: string }) => d)
+  .validator((d: { invitationId: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const companyId = await getCompanyId(context);
@@ -154,7 +154,7 @@ export const resendInvitation = createServerFn({ method: "POST" })
 
 export const revokeInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { invitationId: string }) => d)
+  .validator((d: { invitationId: string }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const companyId = await getCompanyId(context);
@@ -169,7 +169,7 @@ export const revokeInvitation = createServerFn({ method: "POST" })
 
 export const changeUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { userId: string; role: Role }) => {
+  .validator((d: { userId: string; role: Role }) => {
     if (!["admin", "recepcao", "tecnico", "bioquimico"].includes(d.role)) throw new Error("Papel inválido");
     return d;
   })
@@ -217,7 +217,7 @@ export const changeUserRole = createServerFn({ method: "POST" })
 
 export const setUserActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { userId: string; active: boolean }) => d)
+  .validator((d: { userId: string; active: boolean }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const companyId = await getCompanyId(context);

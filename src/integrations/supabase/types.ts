@@ -161,6 +161,21 @@ export type Database = {
           },
         ]
       }
+      cid10: {
+        Row: {
+          code: string
+          name: string
+        }
+        Insert: {
+          code: string
+          name: string
+        }
+        Update: {
+          code?: string
+          name?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           active: boolean
@@ -780,6 +795,7 @@ export type Database = {
           total_value: number
           unit_id: string | null
           updated_at: string
+          cid10_code: string | null
         }
         Insert: {
           billing_batch_id?: string | null
@@ -801,6 +817,7 @@ export type Database = {
           total_value?: number
           unit_id?: string | null
           updated_at?: string
+          cid10_code?: string | null
         }
         Update: {
           billing_batch_id?: string | null
@@ -822,6 +839,7 @@ export type Database = {
           total_value?: number
           unit_id?: string | null
           updated_at?: string
+          cid10_code?: string | null
         }
         Relationships: [
           {
@@ -1120,6 +1138,7 @@ export type Database = {
           id: string
           name: string
           updated_at: string
+          legacy_code: string | null
         }
         Insert: {
           company_id: string
@@ -1127,6 +1146,7 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string
+          legacy_code?: string | null
         }
         Update: {
           company_id?: string
@@ -1134,6 +1154,7 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+          legacy_code?: string | null
         }
         Relationships: [
           {
@@ -1746,6 +1767,81 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      xlab_legacy_exams: {
+        Row: {
+          amb_code: string | null
+          code: string
+          days: number | null
+          fasting_hours: number | null
+          label_group: string | null
+          material: string | null
+          name: string
+          price_sector: string | null
+          sector: string | null
+        }
+        Insert: {
+          amb_code?: string | null
+          code: string
+          days?: number | null
+          fasting_hours?: number | null
+          label_group?: string | null
+          material?: string | null
+          name: string
+          price_sector?: string | null
+          sector?: string | null
+        }
+        Update: {
+          amb_code?: string | null
+          code?: string
+          days?: number | null
+          fasting_hours?: number | null
+          label_group?: string | null
+          material?: string | null
+          name?: string
+          price_sector?: string | null
+          sector?: string | null
+        }
+        Relationships: []
+      }
+      xlab_legacy_price_tables: {
+        Row: {
+          code: string
+          name: string
+          unit: string
+        }
+        Insert: {
+          code: string
+          name: string
+          unit: string
+        }
+        Update: {
+          code?: string
+          name?: string
+          unit?: string
+        }
+        Relationships: []
+      }
+      xlab_legacy_prices: {
+        Row: {
+          exam_code: string
+          factor: number | null
+          price: number | null
+          table_code: string
+        }
+        Insert: {
+          exam_code: string
+          factor?: number | null
+          price?: number | null
+          table_code: string
+        }
+        Update: {
+          exam_code?: string
+          factor?: number | null
+          price?: number | null
+          table_code?: string
         }
         Relationships: []
       }

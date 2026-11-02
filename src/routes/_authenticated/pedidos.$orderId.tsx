@@ -63,7 +63,7 @@ function OrderDetail() {
         .from("orders")
         .select(
           `
-        id, order_number, order_date, collection_date, status, is_urgent, total_value, notes, company_id,
+        id, order_number, order_date, collection_date, status, is_urgent, total_value, notes, company_id, cid10_code,
         payment_status, billing_batch_id, insurance_plan_id,
         patient:patients(id,code,name,cpf,birth_date),
         doctor:doctors(id,name,crm,crm_uf),
@@ -170,7 +170,7 @@ function OrderDetail() {
         <div className="grid gap-4 md:grid-cols-2 mb-6">
           <Info title="Paciente" main={patient?.name} sub={`${patient?.code} · ${patient?.cpf ?? "sem CPF"}`} />
           <Info title="Médico" main={doctor?.name ?? "—"} sub={doctor ? `CRM ${doctor.crm}/${doctor.crm_uf}` : ""} />
-          <Info title="Convênio" main={insurance?.name ?? "Particular"} />
+          <Info title="Convênio" main={insurance?.name ?? "Particular"} sub={(o as { cid10_code?: string | null }).cid10_code ? `CID-10: ${(o as { cid10_code?: string | null }).cid10_code}` : undefined} />
           <Info
             title="Unidade"
             main={unit?.name ?? "—"}

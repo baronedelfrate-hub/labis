@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, X, ChevronsUpDown, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { useCompanyId } from "@/hooks/useCompanyId";
+import { Cid10Combobox } from "@/components/Cid10Combobox";
 
 export const Route = createFileRoute("/_authenticated/pedidos/novo")({
   head: () => ({ meta: [{ title: "Novo pedido — LIS" }] }),
@@ -39,6 +40,7 @@ function NewOrder() {
   const [isUrgent, setIsUrgent] = useState(false);
   const [collectionDate, setCollectionDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [items, setItems] = useState<Exam[]>([]);
+  const [cid10, setCid10] = useState<string | null>(null);
   const [newPatientOpen, setNewPatientOpen] = useState(false);
   const [newDoctorOpen, setNewDoctorOpen] = useState(false);
 
@@ -90,6 +92,7 @@ function NewOrder() {
         insurance_plan_id: insurance.id,
         unit_id: unitId || null,
         is_urgent: isUrgent,
+        cid10_code: cid10,
         collection_date: collectionDate || null,
         total_value: total,
         created_by: user.user?.id,
@@ -162,6 +165,10 @@ function NewOrder() {
                 <Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} />
                 Pedido urgente
               </label>
+              <div className="space-y-1">
+                <Label className="text-sm">CID-10 (opcional)</Label>
+                <Cid10Combobox value={cid10} onChange={setCid10} />
+              </div>
             </section>
           </div>
 

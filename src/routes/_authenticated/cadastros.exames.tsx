@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
 import { validateFormula, findFormulaCycle } from "@/lib/formula";
+import { LegacyCatalogPicker, LegacyPricesSection } from "@/components/LegacyExamCatalog";
 
 type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
 
@@ -40,6 +41,18 @@ function ExamesPage() {
       ]}
       renderForm={({ value, setValue }) => (
         <>
+          {!value.id && (
+            <LegacyCatalogPicker
+              onPick={(r) => setValue({
+                ...value,
+                code: r.code,
+                name: r.name,
+                material: r.material ?? value.material ?? "",
+                deadline_days: r.days ?? value.deadline_days,
+                fasting_hours: r.fasting_hours ?? value.fasting_hours ?? 0,
+              })}
+            />
+          )}
           <div className="grid grid-cols-4 gap-3">
             <Field label="Código*"><Input required autoFocus value={value.code ?? ""} onChange={e => setValue({ ...value, code: e.target.value })} /></Field>
             <div className="col-span-3"><Field label="Nome*"><Input required value={value.name ?? ""} onChange={e => setValue({ ...value, name: e.target.value })} /></Field></div>
@@ -79,6 +92,7 @@ function ExamesPage() {
 
           {value.id && (
             <>
+              <LegacyPricesSection examId={value.id} code={value.code} />
               <ParametersSection examId={value.id} />
               <ReferenceRangesSection examId={value.id} />
             </>

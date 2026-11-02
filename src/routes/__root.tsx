@@ -104,7 +104,37 @@ function RootComponent() {
   // PWA: registra o service worker (só em produção e fora de iframes, ex.: editor do Lovable)
   useEffect(() => {
     if (!import.meta.env.PROD || !("serviceWorker" in navigator) || window.self !== window.top) return;
-    navigator.serviceWorker.register("/sw.js").catch((err) => console.warn("[pwa] sw:", err));
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => reg.update().catch(() => undefined)) // procura versão nova do app a cada abertura
+      .catch((err) => console.warn("[pwa] sw:", err));
+  }, []);
+  // Depois de uma atualização do sistema, uma aba aberta antes pode pedir um arquivo da versão antiga que
+  // já não existe. Em vez de travar (ex.: entrar e a tela não aparecer), recarrega uma vez para pegar a nova.
+  useEffect(() => {
+    const KEY = "labis:reloaded-after-update";
+    const onPreloadError = (event: Event) => {
+      event.preventDefault();
+      try {
+        if (sessionStorage.getItem(KEY)) return; // já recarregou uma vez: não entra em laço
+        sessionStorage.setItem(KEY, "1");
+      } catch {
+        /* sem sessionStorage: recarrega mesmo assim, uma vez por abertura da aba */
+      }
+      window.location.reload();
+    };
+    window.addEventListener("vite:preloadError", onPreloadError);
+    const t = setTimeout(() => {
+      try {
+        sessionStorage.removeItem(KEY);
+      } catch {
+        /* ignora */
+      }
+    }, 15_000);
+    return () => {
+      window.removeEventListener("vite:preloadError", onPreloadError);
+      clearTimeout(t);
+    };
   }, []);
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

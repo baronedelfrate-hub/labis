@@ -89,7 +89,7 @@ function ExamesPage() {
             </span>
           </label>
 
-          <LegacyImportPrompt code={value.code} examId={value.id} />
+          <LegacyImportPrompt code={value.code} examId={value.id} createdAt={(value as { created_at?: string }).created_at} />
 
           {value.id && (
             <>
@@ -551,7 +551,18 @@ function ReferenceRangesSection({ examId }: { examId: string }) {
   );
 }
 
-function LegacyImportPrompt({ code, examId }: { code?: string; examId?: string }) {
+// A importação do legado só vale logo depois de criar o exame. Sem esta trava, abrir qualquer exame
+// existente reimportava parâmetros e referências, desfazendo o que a pessoa tinha apagado ou editado.
+const IMPORT_WINDOW_MS = 10 * 60 * 1000;
+const importedKey = (examId: string) => `labis-legacy-imported:${examId}`;
+function alreadyImported(examId: string) {
+  try { return localStorage.getItem(importedKey(examId)) === "1"; } catch { return false; }
+}
+function markImported(examId: string) {
+  try { localStorage.setItem(importedKey(examId), "1"); } catch { /* sem armazenamento: a janela de tempo ainda protege */ }
+}
+
+function LegacyImportPrompt({ code, examId, createdAt }: { code?: string; examId?: string; createdAt?: string }) {
   const qc = useQueryClient();
   const companyId = useCompanyId();
   const [enabled, setEnabled] = useState(true);
@@ -585,7 +596,10 @@ function LegacyImportPrompt({ code, examId }: { code?: string; examId?: string }
     if (!examId || !enabled || !companyId || !debounced) return;
     if (firedRef.current === examId) return;
     if (!data || data.params + data.refs === 0) return;
+    const age = createdAt ? Date.now() - new Date(createdAt).getTime() : Infinity;
+    if (!(age >= 0 && age < IMPORT_WINDOW_MS) || alreadyImported(examId)) return;
     firedRef.current = examId;
+    markImported(examId);
     (async () => {
       try {
         const { data: rows, error } = await supabase
@@ -656,7 +670,7 @@ function LegacyImportPrompt({ code, examId }: { code?: string; examId?: string }
         toast.error(`Falha ao importar legado: ${e.message ?? e}`);
       }
     })();
-  }, [examId, enabled, data, debounced, companyId, qc]);
+  }, [examId, enabled, data, debounced, companyId, createdAt, qc]);
 
   if (examId) return null;
   if (!debounced || debounced.length < 2) return null;

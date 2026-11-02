@@ -12,6 +12,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
+import { validateFormula, findFormulaCycle } from "@/lib/formula";
 
 type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null };
 
@@ -107,10 +108,33 @@ function PendingReviewBanner() {
   );
 }
 
+const FORMULA_HELP =
+  "Use o CÓDIGO de outros parâmetros deste exame. Operações: + − * / ^ e parênteses. Funções: sqrt( ), ln( ), log( ), exp( ), abs( ), min(a; b), max(a; b). " +
+  "O campo calculado fica verde e não aceita digitação; só calcula quando os campos usados estiverem preenchidos.";
+
+function parseDecimals(v: unknown): number | null {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0 || n > 6) throw new Error("Casas decimais: informe um número inteiro de 0 a 6");
+  return n;
+}
+
+// Valida a fórmula contra os códigos já cadastrados e barra ciclos (A usa B e B usa A).
+function checkFormula(formula: string, code: string | null, selfId: string | null, existing: any[]) {
+  const others = existing.filter(p => p.id !== selfId);
+  const err = validateFormula(formula, others.map(p => p.code).filter(Boolean), code);
+  if (err) throw new Error(err);
+  const cyc = findFormulaCycle([...others.map(p => ({ code: p.code, formula: p.formula })), { code, formula }]);
+  if (cyc) throw new Error(`Fórmulas em ciclo: ${cyc.join(" → ")}`);
+}
+
 function ParametersSection({ examId }: { examId: string }) {
   const qc = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [draft, setDraft] = useState<any>({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "" });
+  const [draft, setDraft] = useState<any>({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFormula, setEditFormula] = useState("");
+  const [editDecimals, setEditDecimals] = useState("");
 
   const { data = [] } = useQuery({
     queryKey: ["exam-parameters", examId],
@@ -124,6 +148,12 @@ function ParametersSection({ examId }: { examId: string }) {
   const add = useMutation({
     mutationFn: async () => {
       if (!draft.name?.trim()) throw new Error("Nome é obrigatório");
+      const formula = draft.formula?.trim() || null;
+      const decimals = parseDecimals(draft.decimals);
+      if (formula) {
+        if (draft.value_type !== "numeric") throw new Error("Só parâmetros numéricos podem ter fórmula");
+        checkFormula(formula, draft.code?.trim() || null, null, data as any[]);
+      }
       const { error } = await supabase.from("exam_parameters").insert({
         exam_id: examId,
         name: draft.name.trim(),
@@ -132,14 +162,37 @@ function ParametersSection({ examId }: { examId: string }) {
         display_order: Number(draft.display_order) || 0,
         value_type: draft.value_type,
         group_label: draft.group_label?.trim() || null,
+        formula,
+        decimals: formula ? decimals : null,
       } as never);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["exam-parameters", examId] });
-      setDraft({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "" });
+      setDraft({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "" });
       setShowAdd(false);
       toast.success("Parâmetro adicionado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveFormula = useMutation({
+    mutationFn: async (p: any) => {
+      const formula = editFormula.trim() || null;
+      if (formula) {
+        if (p.value_type !== "numeric") throw new Error("Só parâmetros numéricos podem ter fórmula");
+        checkFormula(formula, p.code, p.id, data as any[]);
+      }
+      const { error } = await supabase
+        .from("exam_parameters")
+        .update({ formula, decimals: formula ? parseDecimals(editDecimals) : null } as never)
+        .eq("id", p.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["exam-parameters", examId] });
+      setEditingId(null);
+      toast.success("Fórmula salva");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -163,13 +216,49 @@ function ParametersSection({ examId }: { examId: string }) {
       {data.length > 0 && (
         <div className="space-y-1">
           {(data as any[]).map((p) => (
-            <div key={p.id} className="grid grid-cols-[40px_1fr_100px_80px_120px_32px] gap-2 items-center text-xs bg-muted/40 rounded px-2 py-1">
-              <div className="tabular-nums">{p.display_order}</div>
-              <div>{p.name}{p.code ? ` (${p.code})` : ""}</div>
-              <div className="text-muted-foreground">{p.unit ?? "—"}</div>
-              <div className="text-muted-foreground">{p.value_type}</div>
-              <div className="text-muted-foreground truncate">{p.group_label ?? ""}</div>
-              <Button type="button" size="icon" variant="ghost" onClick={() => del.mutate(p.id)}><Trash2 className="size-3 text-destructive" /></Button>
+            <div key={p.id} className="bg-muted/40 rounded px-2 py-1 space-y-1">
+              <div className="grid grid-cols-[40px_1fr_100px_80px_120px_auto] gap-2 items-center text-xs">
+                <div className="tabular-nums">{p.display_order}</div>
+                <div>{p.name}{p.code ? ` (${p.code})` : ""}</div>
+                <div className="text-muted-foreground">{p.unit ?? "—"}</div>
+                <div className="text-muted-foreground">{p.value_type}</div>
+                <div className="text-muted-foreground truncate">{p.group_label ?? ""}</div>
+                <div className="flex">
+                  {p.value_type === "numeric" && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      title="Fórmula (campo calculado)"
+                      className={p.formula ? "text-emerald-700" : "text-muted-foreground"}
+                      onClick={() => {
+                        setEditingId(editingId === p.id ? null : p.id);
+                        setEditFormula(p.formula ?? "");
+                        setEditDecimals(p.decimals != null ? String(p.decimals) : "");
+                      }}
+                    >
+                      <span className="font-serif italic text-sm leading-none">ƒ</span>
+                    </Button>
+                  )}
+                  <Button type="button" size="icon" variant="ghost" onClick={() => del.mutate(p.id)}><Trash2 className="size-3 text-destructive" /></Button>
+                </div>
+              </div>
+              {p.formula && editingId !== p.id && (
+                <div className="text-[11px] text-emerald-800 pl-[48px]">
+                  Calculado: <span className="font-mono">{p.formula}</span>{p.decimals != null ? ` · ${p.decimals} casa(s) decimal(is)` : ""}
+                </div>
+              )}
+              {editingId === p.id && (
+                <div className="grid grid-cols-[1fr_110px_auto] gap-2 items-center pl-[48px] pb-1">
+                  <Input className="h-8 font-mono text-xs" placeholder="Ex.: TOTAL - DIRETA (vazio = digitado)" value={editFormula} onChange={e => setEditFormula(e.target.value)} />
+                  <Input className="h-8 text-xs" type="number" min={0} max={6} placeholder="Casas decimais" value={editDecimals} onChange={e => setEditDecimals(e.target.value)} />
+                  <div className="flex gap-1">
+                    <Button type="button" size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancelar</Button>
+                    <Button type="button" size="sm" onClick={() => saveFormula.mutate(p)} disabled={saveFormula.isPending}>Salvar</Button>
+                  </div>
+                  <div className="col-span-3 text-[11px] text-muted-foreground">{FORMULA_HELP}</div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -189,6 +278,13 @@ function ParametersSection({ examId }: { examId: string }) {
             </SelectContent>
           </Select>
           <Input placeholder="Grupo (opcional)" value={draft.group_label} onChange={e => setDraft({ ...draft, group_label: e.target.value })} />
+          {draft.value_type === "numeric" && (
+            <>
+              <Input className="font-mono" placeholder="Fórmula (opcional) — ex.: TOTAL - DIRETA" value={draft.formula} onChange={e => setDraft({ ...draft, formula: e.target.value })} />
+              <Input type="number" min={0} max={6} placeholder="Casas decimais do resultado" value={draft.decimals} onChange={e => setDraft({ ...draft, decimals: e.target.value })} />
+              {draft.formula?.trim() && <div className="col-span-2 text-[11px] text-muted-foreground">{FORMULA_HELP}</div>}
+            </>
+          )}
           <div className="col-span-2 flex gap-2 justify-end">
             <Button type="button" size="sm" variant="outline" onClick={() => setShowAdd(false)}>Cancelar</Button>
             <Button type="button" size="sm" onClick={() => add.mutate()} disabled={add.isPending}>Salvar parâmetro</Button>
@@ -203,7 +299,7 @@ function ReferenceRangesSection({ examId }: { examId: string }) {
   const qc = useQueryClient();
   const companyId = useCompanyId();
   const [showAdd, setShowAdd] = useState(false);
-  const [draft, setDraft] = useState<any>({ target: "exam", exam_parameter_id: "", sex: "any", age_min_y: "", age_min_m: "", age_max_y: "", age_max_m: "", range_min: "", range_max: "", category_label: "", display_text: "" });
+  const [draft, setDraft] = useState<any>({ target: "exam", exam_parameter_id: "", sex: "any", age_min_y: "", age_min_m: "", age_max_y: "", age_max_m: "", range_min: "", range_max: "", panic_min: "", panic_max: "", category_label: "", display_text: "" });
 
   const { data: params = [] } = useQuery({
     queryKey: ["exam-parameters", examId],
@@ -244,16 +340,21 @@ function ReferenceRangesSection({ examId }: { examId: string }) {
         age_max_months: toMonths(draft.age_max_y, draft.age_max_m),
         range_min: draft.range_min === "" ? null : Number(draft.range_min),
         range_max: draft.range_max === "" ? null : Number(draft.range_max),
+        panic_min: draft.panic_min === "" ? null : Number(String(draft.panic_min).replace(",", ".")),
+        panic_max: draft.panic_max === "" ? null : Number(String(draft.panic_max).replace(",", ".")),
         category_label: draft.category_label?.trim() || null,
         display_text: draft.display_text.trim(),
       };
       if (draft.target === "param" && !payload.exam_parameter_id) throw new Error("Selecione o parâmetro");
+      if ((payload.panic_min != null && Number.isNaN(payload.panic_min)) || (payload.panic_max != null && Number.isNaN(payload.panic_max))) throw new Error("Valores de pânico devem ser números");
+      if (payload.panic_min != null && payload.range_min != null && payload.panic_min > payload.range_min) throw new Error("Pânico mínimo deve ser menor ou igual ao mínimo da faixa");
+      if (payload.panic_max != null && payload.range_max != null && payload.panic_max < payload.range_max) throw new Error("Pânico máximo deve ser maior ou igual ao máximo da faixa");
       const { error } = await supabase.from("reference_ranges").insert(payload as never);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["reference-ranges", examId] });
-      setDraft({ target: "exam", exam_parameter_id: "", sex: "any", age_min_y: "", age_min_m: "", age_max_y: "", age_max_m: "", range_min: "", range_max: "", category_label: "", display_text: "" });
+      setDraft({ target: "exam", exam_parameter_id: "", sex: "any", age_min_y: "", age_min_m: "", age_max_y: "", age_max_m: "", range_min: "", range_max: "", panic_min: "", panic_max: "", category_label: "", display_text: "" });
       setShowAdd(false);
       toast.success("Referência adicionada");
     },
@@ -312,7 +413,12 @@ function ReferenceRangesSection({ examId }: { examId: string }) {
           </div>
           <div>{r.sex ?? "M/F"}</div>
           <div>{formatAgeMonths(r.age_min_months)} — {formatAgeMonths(r.age_max_months)}</div>
-          <div className="tabular-nums">{r.range_min ?? "—"}/{r.range_max ?? "—"}</div>
+          <div className="tabular-nums">
+            {r.range_min ?? "—"}/{r.range_max ?? "—"}
+            {(r.panic_min != null || r.panic_max != null) && (
+              <div className="text-[10px] text-red-700">pânico &lt;{r.panic_min ?? "—"} / &gt;{r.panic_max ?? "—"}</div>
+            )}
+          </div>
           <div className="truncate text-muted-foreground">{r.display_text}</div>
           <div className="flex gap-1">
             {r.needs_review && (
@@ -358,6 +464,9 @@ function ReferenceRangesSection({ examId }: { examId: string }) {
           </div>
           <Input placeholder="Mínimo (num)" value={draft.range_min} onChange={e => setDraft({ ...draft, range_min: e.target.value })} />
           <Input placeholder="Máximo (num)" value={draft.range_max} onChange={e => setDraft({ ...draft, range_max: e.target.value })} />
+          <Input className="border-red-300" placeholder="Pânico: abaixo de (num)" value={draft.panic_min} onChange={e => setDraft({ ...draft, panic_min: e.target.value })} />
+          <Input className="border-red-300" placeholder="Pânico: acima de (num)" value={draft.panic_max} onChange={e => setDraft({ ...draft, panic_max: e.target.value })} />
+          <div className="col-span-2 text-[11px] text-muted-foreground">Pânico = valor com risco de vida. O sistema alerta quem lança o resultado quando ele fica abaixo/acima destes limites (opcional).</div>
           <div className="col-span-2"><Input placeholder="Texto exibido no laudo*" value={draft.display_text} onChange={e => setDraft({ ...draft, display_text: e.target.value })} /></div>
           <div className="col-span-2 flex gap-2 justify-end">
             <Button type="button" size="sm" variant="outline" onClick={() => setShowAdd(false)}>Cancelar</Button>

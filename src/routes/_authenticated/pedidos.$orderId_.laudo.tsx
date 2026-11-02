@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Printer } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPortalAccessInfo } from "@/lib/portal.functions";
+import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/laudo")({
   ssr: false,
@@ -196,7 +197,7 @@ function LaudoPage() {
                     <tr key={i.id}>
                       <td className="tabular-nums">{i.exam?.code}</td>
                       <td>{i.exam?.name}</td>
-                      <td className="tabular-nums font-medium">{r.value}</td>
+                      <td className="tabular-nums font-medium"><FlaggedValue value={r.value} limits={limitsOf(r)} /></td>
                       <td>{r.unit ?? "—"}</td>
                       <td className="tabular-nums">{ref}</td>
                       <td className="tabular-nums text-muted-foreground">
@@ -282,7 +283,7 @@ export function ExamBlock({ item, result, groups, releasedAt, collectionDate }: 
             ...values.map((v: any) => (
               <tr key={v.id}>
                 <td>{v.parameter?.name ?? "—"}</td>
-                <td className="tabular-nums font-medium">{v.value}</td>
+                <td className="tabular-nums font-medium"><FlaggedValue value={v.value} limits={limitsOf(v)} /></td>
                 <td>{v.unit ?? v.parameter?.unit ?? "—"}</td>
                 <td>{v.reference_display_text ?? "—"}</td>
               </tr>

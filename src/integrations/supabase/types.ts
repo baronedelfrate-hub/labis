@@ -380,6 +380,8 @@ export type Database = {
           unit: string | null
           updated_at: string
           value_type: Database["public"]["Enums"]["exam_value_type"]
+          decimals: number | null
+          formula: string | null
         }
         Insert: {
           code?: string | null
@@ -392,6 +394,8 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           value_type?: Database["public"]["Enums"]["exam_value_type"]
+          decimals?: number | null
+          formula?: string | null
         }
         Update: {
           code?: string | null
@@ -404,6 +408,8 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           value_type?: Database["public"]["Enums"]["exam_value_type"]
+          decimals?: number | null
+          formula?: string | null
         }
         Relationships: [
           {
@@ -1111,6 +1117,8 @@ export type Database = {
           range_min: number | null
           sex: Database["public"]["Enums"]["sex_type"] | null
           updated_at: string
+          panic_max: number | null
+          panic_min: number | null
         }
         Insert: {
           age_max_months?: number | null
@@ -1128,6 +1136,8 @@ export type Database = {
           range_min?: number | null
           sex?: Database["public"]["Enums"]["sex_type"] | null
           updated_at?: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Update: {
           age_max_months?: number | null
@@ -1145,6 +1155,8 @@ export type Database = {
           range_min?: number | null
           sex?: Database["public"]["Enums"]["sex_type"] | null
           updated_at?: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Relationships: [
           {
@@ -1181,6 +1193,8 @@ export type Database = {
           result_id: string
           unit: string | null
           value: string
+          panic_max: number | null
+          panic_min: number | null
         }
         Insert: {
           created_at?: string
@@ -1192,6 +1206,8 @@ export type Database = {
           result_id: string
           unit?: string | null
           value: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Update: {
           created_at?: string
@@ -1203,6 +1219,8 @@ export type Database = {
           result_id?: string
           unit?: string | null
           value?: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Relationships: [
           {
@@ -1240,6 +1258,8 @@ export type Database = {
           unit: string | null
           updated_at: string
           value: string
+          panic_max: number | null
+          panic_min: number | null
         }
         Insert: {
           company_id: string
@@ -1259,6 +1279,8 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           value: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Update: {
           company_id?: string
@@ -1278,6 +1300,8 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           value?: string
+          panic_max?: number | null
+          panic_min?: number | null
         }
         Relationships: [
           {

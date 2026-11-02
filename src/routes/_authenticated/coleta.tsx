@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { CheckCheck, PackageCheck, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCheck, PackageCheck, XCircle, AlertTriangle, Printer, ScanBarcode, CheckCircle2 } from "lucide-react";
+import { parseSampleBarcode, sectorCodeFor } from "@/lib/sample-barcode";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/coleta")({
@@ -30,6 +31,9 @@ function ColetaPage() {
   const [date, setDate] = useState(today);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [scanValue, setScanValue] = useState("");
+  const [lastScan, setLastScan] = useState<{ kind: "ok" | "info" | "error"; text: string } | null>(null);
+  const scanRef = useRef<HTMLInputElement>(null);
 
   const { data = [] } = useQuery({
     queryKey: ["coleta", date],
@@ -84,6 +88,41 @@ function ColetaPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Triagem por leitor de código de barras: o leitor "digita" os 10 dígitos e aperta Enter.
+  const scan = useMutation({
+    mutationFn: async (raw: string) => {
+      const parsed = parseSampleBarcode(raw);
+      if (!parsed) throw new Error("Código inválido: a etiqueta da amostra tem 10 dígitos.");
+      const { data: sectors, error: be } = await supabase.from("barcode_sectors").select("sector, code");
+      if (be) throw be;
+      const codes = new Map<string, number>((sectors ?? []).map((x: any) => [x.sector as string, x.code as number]));
+      const { data: rows, error } = await supabase
+        .from("samples")
+        .select("id, sample_number, sector, material, status, orders!inner(order_number, patient:patients(name))")
+        .eq("sample_number", parsed.sample)
+        .eq("orders.order_number", parsed.orderSeq);
+      if (error) throw error;
+      const s = (rows ?? [])[0] as any;
+      if (!s) throw new Error(`Amostra não encontrada (pedido ${parsed.orderSeq}, amostra ${parsed.sample}).`);
+      const who = `#${s.orders?.order_number} · ${s.orders?.patient?.name ?? ""} · ${s.material}${s.sector ? ` (${s.sector})` : ""}`;
+      if (sectorCodeFor(s.sector, codes) !== parsed.sectorCode) {
+        throw new Error(`O setor do código (${String(parsed.sectorCode).padStart(2, "0")}) não confere com o da amostra (${s.sector ?? "sem setor"}). ${who}`);
+      }
+      if (s.status === "rejeitada") throw new Error(`Amostra rejeitada — precisa de nova coleta. ${who}`);
+      if (s.status === "pendente") throw new Error(`Amostra ainda não foi coletada. Colete primeiro. ${who}`);
+      if (s.status === "recebida") return { kind: "info" as const, text: `Já estava recebida. ${who}` };
+      const { data: u } = await supabase.auth.getUser();
+      const { error: ue } = await supabase.from("samples").update({
+        status: "recebida", received_at: new Date().toISOString(), received_by: u.user?.id ?? null,
+      }).eq("id", s.id);
+      if (ue) throw ue;
+      return { kind: "ok" as const, text: `Recebida no setor. ${who}` };
+    },
+    onSuccess: (r) => { setLastScan(r); qc.invalidateQueries({ queryKey: ["coleta"] }); },
+    onError: (e: Error) => setLastScan({ kind: "error", text: e.message }),
+    onSettled: () => { setScanValue(""); scanRef.current?.focus(); },
+  });
+
   const collectOrder = useMutation({
     mutationFn: async (samples: { id: string; status: string }[]) => {
       const pending = samples.filter((s) => s.status === "pendente");
@@ -104,6 +143,37 @@ function ColetaPage() {
         <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-auto" />
       } />
       <PageBody>
+        <form
+          className="mb-4 rounded-md border bg-card p-3 space-y-2"
+          onSubmit={(e) => { e.preventDefault(); if (scanValue.trim() && !scan.isPending) scan.mutate(scanValue); }}
+        >
+          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+            <ScanBarcode className="size-4" />Triagem por código de barras — leia a etiqueta da amostra
+          </label>
+          <Input
+            ref={scanRef}
+            value={scanValue}
+            onChange={(e) => setScanValue(e.target.value)}
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="Passe o leitor na etiqueta (10 dígitos) e aperte Enter"
+            className="font-mono tracking-widest"
+          />
+          {lastScan && (
+            <div
+              role="status"
+              className={cn(
+                "rounded border px-3 py-2 text-sm flex items-start gap-2",
+                lastScan.kind === "ok" && "border-emerald-300 bg-emerald-50 text-emerald-900",
+                lastScan.kind === "info" && "border-sky-300 bg-sky-50 text-sky-900",
+                lastScan.kind === "error" && "border-red-300 bg-red-50 text-red-900",
+              )}
+            >
+              {lastScan.kind === "error" ? <AlertTriangle className="size-4 mt-0.5 shrink-0" /> : <CheckCircle2 className="size-4 mt-0.5 shrink-0" />}
+              <span>{lastScan.text}</span>
+            </div>
+          )}
+        </form>
         {data.length === 0 && <div className="text-muted-foreground text-sm">Sem pedidos nesta data.</div>}
         <div className="space-y-4">
           {data.map((o: any) => {
@@ -115,12 +185,15 @@ function ColetaPage() {
             if (allDone && !hasRecoleta) return null;
             return (
               <section key={o.id} className="rounded-md border bg-card p-4">
-                <header className="flex items-center gap-3 mb-3">
+                <header className="flex flex-wrap items-center gap-3 mb-3">
                   <div className="font-semibold">#{o.order_number}</div>
                   <div className="text-sm">{o.patient?.name} <span className="text-muted-foreground">· {o.patient?.code}</span></div>
                   {o.is_urgent && <Badge className="bg-warning text-warning-foreground">Urgente</Badge>}
                   {hasRecoleta && <Badge className="bg-red-100 text-red-900"><AlertTriangle className="size-3 mr-1" />Recoleta</Badge>}
                   <div className="ml-auto flex gap-2">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/pedidos/$orderId/etiquetas" params={{ orderId: o.id }}><Printer className="size-4 mr-1" />Etiquetas</Link>
+                    </Button>
                     <Button size="sm" variant="secondary" onClick={() => collectOrder.mutate(activeSamples)} disabled={!activeSamples.some((s) => s.status === "pendente")}>
                       <CheckCheck className="size-4 mr-1" />Coletar todas
                     </Button>

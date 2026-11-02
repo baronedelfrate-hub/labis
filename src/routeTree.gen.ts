@@ -37,6 +37,7 @@ import { Route as ApiPublicPortalLoginRouteImport } from './routes/api/public/po
 import { Route as AuthenticatedFinanceiroLotesIndexRouteImport } from './routes/_authenticated/financeiro.lotes.index'
 import { Route as AuthenticatedFinanceiroLotesBatchIdRouteImport } from './routes/_authenticated/financeiro.lotes.$batchId'
 import { Route as AuthenticatedPedidosOrderIdComprovanteRouteImport } from './routes/_authenticated/pedidos.$orderId_.comprovante'
+import { Route as AuthenticatedPedidosOrderIdEtiquetasRouteImport } from './routes/_authenticated/pedidos.$orderId_.etiquetas'
 import { Route as AuthenticatedPedidosOrderIdLaudoRouteImport } from './routes/_authenticated/pedidos.$orderId_.laudo'
 
 const IndexRoute = IndexRouteImport.update({
@@ -195,6 +196,12 @@ const AuthenticatedPedidosOrderIdComprovanteRoute =
     path: '/pedidos/$orderId/comprovante',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPedidosOrderIdEtiquetasRoute =
+  AuthenticatedPedidosOrderIdEtiquetasRouteImport.update({
+    id: '/pedidos/$orderId_/etiquetas',
+    path: '/pedidos/$orderId/etiquetas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPedidosOrderIdLaudoRoute =
   AuthenticatedPedidosOrderIdLaudoRouteImport.update({
     id: '/pedidos/$orderId_/laudo',
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/pedidos/$orderId/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
+  '/pedidos/$orderId/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
   '/pedidos/$orderId/laudo': typeof AuthenticatedPedidosOrderIdLaudoRoute
   '/financeiro/lotes/': typeof AuthenticatedFinanceiroLotesIndexRoute
 }
@@ -259,6 +267,7 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
   '/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/pedidos/$orderId/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
+  '/pedidos/$orderId/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
   '/pedidos/$orderId/laudo': typeof AuthenticatedPedidosOrderIdLaudoRoute
   '/financeiro/lotes': typeof AuthenticatedFinanceiroLotesIndexRoute
 }
@@ -291,6 +300,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
   '/_authenticated/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/_authenticated/pedidos/$orderId_/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
+  '/_authenticated/pedidos/$orderId_/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
   '/_authenticated/pedidos/$orderId_/laudo': typeof AuthenticatedPedidosOrderIdLaudoRoute
   '/_authenticated/financeiro/lotes/': typeof AuthenticatedFinanceiroLotesIndexRoute
 }
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/pedidos/'
     | '/financeiro/lotes/$batchId'
     | '/pedidos/$orderId/comprovante'
+    | '/pedidos/$orderId/etiquetas'
     | '/pedidos/$orderId/laudo'
     | '/financeiro/lotes/'
   fileRoutesByTo: FileRoutesByTo
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/financeiro/lotes/$batchId'
     | '/pedidos/$orderId/comprovante'
+    | '/pedidos/$orderId/etiquetas'
     | '/pedidos/$orderId/laudo'
     | '/financeiro/lotes'
   id:
@@ -384,6 +396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos/'
     | '/_authenticated/financeiro/lotes/$batchId'
     | '/_authenticated/pedidos/$orderId_/comprovante'
+    | '/_authenticated/pedidos/$orderId_/etiquetas'
     | '/_authenticated/pedidos/$orderId_/laudo'
     | '/_authenticated/financeiro/lotes/'
   fileRoutesById: FileRoutesById
@@ -596,6 +609,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosOrderIdComprovanteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pedidos/$orderId_/etiquetas': {
+      id: '/_authenticated/pedidos/$orderId_/etiquetas'
+      path: '/pedidos/$orderId/etiquetas'
+      fullPath: '/pedidos/$orderId/etiquetas'
+      preLoaderRoute: typeof AuthenticatedPedidosOrderIdEtiquetasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pedidos/$orderId_/laudo': {
       id: '/_authenticated/pedidos/$orderId_/laudo'
       path: '/pedidos/$orderId/laudo'
@@ -627,6 +647,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
   AuthenticatedFinanceiroLotesBatchIdRoute: typeof AuthenticatedFinanceiroLotesBatchIdRoute
   AuthenticatedPedidosOrderIdComprovanteRoute: typeof AuthenticatedPedidosOrderIdComprovanteRoute
+  AuthenticatedPedidosOrderIdEtiquetasRoute: typeof AuthenticatedPedidosOrderIdEtiquetasRoute
   AuthenticatedPedidosOrderIdLaudoRoute: typeof AuthenticatedPedidosOrderIdLaudoRoute
   AuthenticatedFinanceiroLotesIndexRoute: typeof AuthenticatedFinanceiroLotesIndexRoute
 }
@@ -656,6 +677,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFinanceiroLotesBatchIdRoute,
   AuthenticatedPedidosOrderIdComprovanteRoute:
     AuthenticatedPedidosOrderIdComprovanteRoute,
+  AuthenticatedPedidosOrderIdEtiquetasRoute:
+    AuthenticatedPedidosOrderIdEtiquetasRoute,
   AuthenticatedPedidosOrderIdLaudoRoute: AuthenticatedPedidosOrderIdLaudoRoute,
   AuthenticatedFinanceiroLotesIndexRoute:
     AuthenticatedFinanceiroLotesIndexRoute,

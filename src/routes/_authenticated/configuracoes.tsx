@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useCompanyId } from "@/hooks/useCompanyId";
 import { toast } from "sonner";
 import { Upload, Loader2 } from "lucide-react";
+import { BarcodeSectorsCard } from "@/components/BarcodeSectorsCard";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   ssr: false,
@@ -167,6 +168,8 @@ function SettingsPage() {
             </div>
             <Field label="Rodapé (texto adicional)"><Textarea rows={2} value={form.footer_note} onChange={e => setForm({ ...form, footer_note: e.target.value })} /></Field>
           </div>
+
+          <BarcodeSectorsCard />
         </div>
       </PageBody>
     </>

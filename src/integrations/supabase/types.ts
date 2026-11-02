@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      barcode_sectors: {
+        Row: {
+          code: number
+          company_id: string
+          created_at: string
+          id: string
+          sector: string
+          updated_at: string
+        }
+        Insert: {
+          code: number
+          company_id: string
+          created_at?: string
+          id?: string
+          sector: string
+          updated_at?: string
+        }
+        Update: {
+          code?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          sector?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barcode_sectors_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_batch_items: {
         Row: {
           billing_batch_id: string

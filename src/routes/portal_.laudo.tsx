@@ -167,6 +167,9 @@ function PortalLaudoPage() {
   );
 }
 
+// Linha extra do campo (cadastrada no exame): pequena, em itálico, ocupando a largura da tabela
+const EXTRA_LINE_STYLE = { fontStyle: "italic", fontSize: "11px", color: "#475569", whiteSpace: "pre-line" } as const;
+
 function ExamBlock({ item, result, groups, collectionDate }: { item: any; result: any; groups: [string, any[]][]; collectionDate: string | null }) {
   const reviewer = result.reviewer;
   return (
@@ -190,14 +193,16 @@ function ExamBlock({ item, result, groups, collectionDate }: { item: any; result
         <tbody>
           {groups.flatMap(([groupLabel, values]) => [
             ...(groupLabel ? [<tr key={`g-${groupLabel}`}><td colSpan={4} style={{ background: "#f1f5f9", fontWeight: 600 }}>{groupLabel}</td></tr>] : []),
-            ...values.map((v: any) => (
+            ...values.flatMap((v: any) => [
+              ...(v.extra_before ? [<tr key={`${v.id}-b`}><td colSpan={4} style={EXTRA_LINE_STYLE}>{v.extra_before}</td></tr>] : []),
               <tr key={v.id}>
                 <td>{v.parameter?.name ?? "—"}</td>
                 <td className="tabular-nums font-medium"><FlaggedValue value={v.value} limits={limitsOf(v)} showPanic={false} /></td>
                 <td>{v.unit ?? v.parameter?.unit ?? "—"}</td>
                 <td>{v.reference_display_text ?? "—"}</td>
-              </tr>
-            )),
+              </tr>,
+              ...(v.extra_after ? [<tr key={`${v.id}-a`}><td colSpan={4} style={EXTRA_LINE_STYLE}>{v.extra_after}</td></tr>] : []),
+            ]),
           ])}
         </tbody>
       </table>

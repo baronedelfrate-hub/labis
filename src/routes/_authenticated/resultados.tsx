@@ -150,9 +150,10 @@ function ResultadosPage() {
 }
 
 // Cor do campo conforme o alerta: pânico (vermelho), fora da faixa (âmbar) ou calculado (verde)
-function valueClass(flag: ResultFlag, calculated = false) {
+function valueClass(flag: ResultFlag, calculated = false, notCounted = false) {
   if (isPanic(flag)) return "border-red-500 bg-red-50 text-red-900 font-semibold focus-visible:ring-red-500";
   if (flag !== "normal") return "border-amber-500 bg-amber-50 text-amber-950 focus-visible:ring-amber-500";
+  if (notCounted) return "border-[#a1887f] bg-[#efe6dc] text-stone-900"; // marrom: preenchido, mas não conta como resultado
   if (calculated) return "border-emerald-300 bg-emerald-50 text-emerald-950";
   return "";
 }
@@ -220,6 +221,12 @@ function ResultItemCard({
     return { ...typed, ...computed } as Record<string, string>;
   }, [parameters, paramValues]);
 
+  // "Conta como resultado": campos marcados assim completam o exame; os demais só complementam
+  const countsAsResult = (p: any) => p.counts_as_result !== false;
+  const anyTyped = parameters.some((p) => !p.formula?.trim() && paramValues[p.id]?.trim());
+  const countingFilled = parameters.some((p) => countsAsResult(p) && values[p.id]?.trim());
+  const missingCounting = isMulti && anyTyped && !countingFilled;
+
   const simpleMatch = findMatchingRange(rangesByExam.get(item.exam_id) ?? [], { sex, ageMonths });
   const simpleFlag = getFlag(simpleValue, limitsOf(simpleMatch));
 
@@ -238,8 +245,8 @@ function ResultItemCard({
 
       if (isMulti) {
         // ao menos um valor digitado (campo calculado sozinho não conta)
-        const hasAny = parameters.some((p) => !p.formula?.trim() && paramValues[p.id]?.trim());
-        if (!hasAny) throw new Error("Informe ao menos um valor");
+        if (!anyTyped) throw new Error("Informe ao menos um valor");
+        if (!countingFilled) throw new Error("Preencha ao menos um campo que conta como resultado (os campos em marrom só complementam o exame)");
 
         const { data: inserted, error } = await supabase
           .from("results")
@@ -270,6 +277,8 @@ function ResultItemCard({
               reference_max: match?.range_max ?? null,
               panic_min: match?.panic_min ?? null,
               panic_max: match?.panic_max ?? null,
+              extra_before: p.extra_line_before ?? null,
+              extra_after: p.extra_line_after ?? null,
             };
           });
         if (rows.length > 0) {
@@ -350,12 +359,14 @@ function ResultItemCard({
                 {(params as any[]).map((p) => {
                   const match = matchFor(p.id);
                   const isCalc = !!p.formula?.trim();
+                  const notCounted = !countsAsResult(p);
                   const flag = getFlag(values[p.id], limitsOf(match));
                   return (
                     <div key={p.id} className="grid grid-cols-[1fr_130px] sm:grid-cols-[1fr_140px_60px_1fr] gap-x-2 gap-y-0.5 px-3 py-1.5 items-start border-t text-sm">
                       <div className="pt-2">
                         {p.name}
                         {isCalc && <span className="ml-1 text-[10px] text-emerald-700" title={`Calculado: ${p.formula}`}>ƒ calculado</span>}
+                        {notCounted && <span className="ml-1 text-[10px] text-[#795548]" title="Sozinho, este campo não faz o exame ter resultado">não conta como resultado</span>}
                       </div>
                       <div>
                         <Input
@@ -363,7 +374,7 @@ function ResultItemCard({
                           readOnly={isCalc}
                           tabIndex={isCalc ? -1 : undefined}
                           placeholder={isCalc ? "auto" : undefined}
-                          className={valueClass(flag, isCalc)}
+                          className={valueClass(flag, isCalc, notCounted && !!values[p.id]?.trim())}
                           onChange={(e) => setParamValues((v) => ({ ...v, [p.id]: e.target.value }))}
                         />
                         <FlagNote flag={flag} />
@@ -395,8 +406,13 @@ function ResultItemCard({
         <Textarea rows={2} value={observation} onChange={(e) => setObservation(e.target.value)} />
       </div>
 
+      {missingCounting && (
+        <div className="rounded border border-[#a1887f] bg-[#efe6dc] px-3 py-2 text-xs text-stone-900">
+          Só há campos que não contam como resultado preenchidos (marrom). Preencha um campo de resultado para poder lançar.
+        </div>
+      )}
       <div className="flex justify-end">
-        <Button onClick={submit} disabled={save.isPending} variant={panicItems.length > 0 ? "destructive" : "default"}>
+        <Button onClick={submit} disabled={save.isPending || missingCounting} variant={panicItems.length > 0 ? "destructive" : "default"}>
           Lançar
         </Button>
       </div>

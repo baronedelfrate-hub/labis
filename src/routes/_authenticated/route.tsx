@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useMyRoles } from "@/hooks/useMyRoles";
+import { HelpButton } from "@/components/HelpButton";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -181,9 +182,10 @@ function AuthedLayout() {
           <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
           <span className="font-semibold">LabIS</span>
         </header>
-        <main className="flex-1 min-w-0 overflow-x-hidden">
+        <main className="flex-1 min-w-0 overflow-x-hidden pb-20 print:pb-0">
           <Outlet />
         </main>
+        <HelpButton />
       </div>
     </div>
   );

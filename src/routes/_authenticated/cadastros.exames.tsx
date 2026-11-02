@@ -50,6 +50,7 @@ function ExamesPage() {
                 material: r.material ?? value.material ?? "",
                 deadline_days: r.days ?? value.deadline_days,
                 fasting_hours: r.fasting_hours ?? value.fasting_hours ?? 0,
+                is_text: r.is_text || (value.is_text ?? false),
               })}
             />
           )}

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export type LegacyExam = {
   code: string; name: string; amb_code: string | null; sector: string | null; material: string | null;
-  days: number | null; fasting_hours: number | null;
+  days: number | null; fasting_hours: number | null; is_text: boolean;
 };
 
 // No XLAB7 o "setor" do exame é quem realiza; estes não são realizados pelo laboratório.
@@ -35,7 +35,7 @@ export function LegacyCatalogPicker({ onPick }: { onPick: (e: LegacyExam) => voi
       const q = debounced.replace(/[%,()*:]/g, " ").trim();
       const { data, error } = await supabase
         .from("xlab_legacy_exams")
-        .select("code, name, amb_code, sector, material, days, fasting_hours")
+        .select("code, name, amb_code, sector, material, days, fasting_hours, is_text")
         .or(`code.ilike.${q}%,name.ilike.%${q}%`)
         .order("code")
         .limit(80);
@@ -71,7 +71,7 @@ export function LegacyCatalogPicker({ onPick }: { onPick: (e: LegacyExam) => voi
             >
               <div><span className="font-mono tabular-nums mr-2">{r.code}</span>{r.name}</div>
               <div className="text-[11px] text-muted-foreground">
-                {[r.material, r.sector && `setor ${r.sector}`, r.days != null && `prazo ${r.days} dia(s)`, r.fasting_hours ? `jejum ${r.fasting_hours} h` : null].filter(Boolean).join(" · ")}
+                {[r.is_text && "resultado em texto", r.material, r.sector && `setor ${r.sector}`, r.days != null && `prazo ${r.days} dia(s)`, r.fasting_hours ? `jejum ${r.fasting_hours} h` : null].filter(Boolean).join(" · ")}
               </div>
             </button>
           ))}
@@ -199,6 +199,45 @@ export function LegacyPricesSection({ examId, code }: { examId: string; code?: s
       <div className="flex justify-end">
         <Button type="button" size="sm" onClick={() => copy.mutate()} disabled={copy.isPending || picked.size === 0}>Copiar preços marcados</Button>
       </div>
+    </div>
+  );
+}
+
+export type LegacyInsurance = {
+  code: string; name: string; ans_code: string | null; tiss_table: string | null;
+  price_table_code: string | null; price_factor: number | null;
+};
+
+// Operadoras que o XLAB7 trazia, com código ANS e tabela TISS: ao cadastrar um convênio novo, escolha uma.
+export function LegacyInsurancePicker({ onPick }: { onPick: (i: LegacyInsurance) => void }) {
+  const { data = [] } = useQuery({
+    queryKey: ["legacy-insurances"],
+    staleTime: 3_600_000,
+    queryFn: async (): Promise<LegacyInsurance[]> => {
+      const { data, error } = await supabase.from("xlab_legacy_insurances").select("code, name, ans_code, tiss_table, price_table_code, price_factor").order("name");
+      if (error) throw error;
+      return (data ?? []) as LegacyInsurance[];
+    },
+  });
+  if (data.length === 0) return null;
+  return (
+    <div className="rounded-md border border-dashed bg-muted/30 p-3 space-y-2">
+      <div className="flex items-center gap-2 text-sm font-medium"><BookOpen className="size-4" />Escolher uma operadora do XLAB7</div>
+      <div className="flex flex-wrap gap-2">
+        {data.map((i) => (
+          <button
+            type="button"
+            key={i.code}
+            className="rounded-md border bg-background px-2.5 py-1.5 text-left text-xs hover:bg-muted/60 focus:bg-muted/60 outline-none"
+            onClick={() => onPick(i)}
+            title={`ANS ${i.ans_code ?? "—"} · tabela TISS ${i.tiss_table ?? "—"}`}
+          >
+            <div className="font-medium">{i.name}</div>
+            <div className="text-muted-foreground">ANS {i.ans_code ?? "—"}</div>
+          </button>
+        ))}
+      </div>
+      <div className="text-[11px] text-muted-foreground">Preenche o nome, o código, o registro ANS e a tabela TISS. A tabela de preço você escolhe em seguida.</div>
     </div>
   );
 }

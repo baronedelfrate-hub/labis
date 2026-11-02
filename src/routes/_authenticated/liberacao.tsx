@@ -48,7 +48,7 @@ function LiberacaoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("results")
-        .select("id, value, unit, reference_min, reference_max, panic_min, panic_max, observation, entered_at, order_item:order_items(id, exam:exams(code,name,sector), order:orders(id,order_number,patient:patients(name,code))), values:result_values(id, value, unit, reference_min, reference_max, panic_min, panic_max, reference_display_text, parameter:exam_parameters(name, display_order, group_label))")
+        .select("id, value, unit, reference_min, reference_max, panic_min, panic_max, observation, entered_at, order_item:order_items(id, exam:exams(code,name,sector,is_text), order:orders(id,order_number,patient:patients(name,code))), values:result_values(id, value, unit, reference_min, reference_max, panic_min, panic_max, reference_display_text, parameter:exam_parameters(name, display_order, group_label))")
         .eq("released", false);
       if (error) throw error;
       return data ?? [];
@@ -178,6 +178,8 @@ function LiberacaoPage() {
                                 );
                               })}
                             </div>
+                          ) : ex?.is_text ? (
+                            <div className="mt-1 rounded border bg-muted/30 px-3 py-2 text-sm whitespace-pre-wrap leading-relaxed">{r.value}</div>
                           ) : (
                             <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4">
                               <div className={cn("font-medium tabular-nums", isPanic(simpleFlag) && "text-red-700")}>

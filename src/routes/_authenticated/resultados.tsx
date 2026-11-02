@@ -37,7 +37,7 @@ function ResultadosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status)")
+        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status)")
         .in("status", ["coletado"]);
       if (error) throw error;
       return (data ?? []).filter((r: any) => r.sample?.status === "recebida");
@@ -187,6 +187,27 @@ function ResultItemCard({
   const [confirmPanic, setConfirmPanic] = useState(false);
 
   const isMulti = parameters.length > 0;
+  // Exame tipo texto: resultado em texto livre (só vale para exame sem parâmetros)
+  const isTextExam = !!item.exam?.is_text && !isMulti;
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ["result-templates"],
+    enabled: isTextExam,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("result_templates").select("id, title, body, exam_id").order("title");
+      if (error) throw error;
+      return (data ?? []) as { id: string; title: string; body: string; exam_id: string | null }[];
+    },
+  });
+  // textos do próprio exame primeiro, depois os gerais
+  const usableTemplates = templates
+    .filter((t) => !t.exam_id || t.exam_id === item.exam_id)
+    .sort((a, b) => (b.exam_id === item.exam_id ? 1 : 0) - (a.exam_id === item.exam_id ? 1 : 0) || a.title.localeCompare(b.title, "pt-BR"));
+  const insertTemplate = (id: string) => {
+    const t = usableTemplates.find((x) => x.id === id);
+    if (!t) return;
+    setSimpleValue((cur) => (cur.trim() ? `${cur.replace(/\s+$/, "")}\n\n${t.body}` : t.body));
+  };
 
   // Faixa de referência (e limites de pânico) que vale para este paciente
   const matchFor = (paramId: string) => findMatchingRange(rangesByParam.get(paramId) ?? [], { sex, ageMonths });
@@ -387,6 +408,24 @@ function ResultItemCard({
               </div>
             </div>
           ))}
+        </div>
+      ) : isTextExam ? (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <label className="text-xs text-muted-foreground">Resultado (texto)</label>
+            {usableTemplates.length > 0 && (
+              <Select value="" onValueChange={insertTemplate}>
+                <SelectTrigger className="w-full sm:w-72 h-8"><SelectValue placeholder="Inserir texto-modelo…" /></SelectTrigger>
+                <SelectContent>
+                  {usableTemplates.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <Textarea rows={10} value={simpleValue} onChange={(e) => setSimpleValue(e.target.value)} placeholder="Escreva o resultado do exame…" />
+          {usableTemplates.length === 0 && (
+            <div className="text-xs text-muted-foreground">Dica: cadastre textos-modelo em Cadastros → Textos-modelo para inserir aqui.</div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-3">

@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/
 import {
   FlaskConical, LayoutDashboard, ClipboardList, Plus, Users, Stethoscope,
   ShieldCheck, Building2, Tags, TestTubes, Layers, LogOut, ChevronRight, UserCog,
-  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu,
+  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ const cadastros = [
   { to: "/cadastros/tabelas-preco", label: "Tabelas de preço", icon: Tags },
   { to: "/cadastros/exames", label: "Exames", icon: TestTubes },
   { to: "/cadastros/grupos-exames", label: "Grupos de exames", icon: Layers },
+  { to: "/cadastros/textos-modelo", label: "Textos-modelo", icon: FileText },
 ];
 
 function AuthedLayout() {

@@ -11,6 +11,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { CheckCheck, PackageCheck, XCircle, AlertTriangle, Printer, ScanBarcode, CheckCircle2 } from "lucide-react";
 import { parseSampleBarcode, sectorCodeFor } from "@/lib/sample-barcode";
+import { SampleHistory } from "@/components/SampleHistory";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/coleta")({
@@ -56,7 +57,7 @@ function ColetaPage() {
       }).eq("id", sampleId);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); toast.success("Amostra coletada"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); qc.invalidateQueries({ queryKey: ["sample-events"] }); toast.success("Amostra coletada"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -68,7 +69,7 @@ function ColetaPage() {
       }).eq("id", sampleId);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); toast.success("Amostra recebida no setor"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); qc.invalidateQueries({ queryKey: ["sample-events"] }); toast.success("Amostra recebida no setor"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -82,7 +83,7 @@ function ColetaPage() {
     },
     onSuccess: () => {
       setRejectingId(null); setRejectReason("");
-      qc.invalidateQueries({ queryKey: ["coleta"] });
+      qc.invalidateQueries({ queryKey: ["coleta"] }); qc.invalidateQueries({ queryKey: ["sample-events"] });
       toast.success("Amostra rejeitada. Os exames voltaram para nova coleta.");
     },
     onError: (e: Error) => toast.error(e.message),
@@ -118,7 +119,7 @@ function ColetaPage() {
       if (ue) throw ue;
       return { kind: "ok" as const, text: `Recebida no setor. ${who}` };
     },
-    onSuccess: (r) => { setLastScan(r); qc.invalidateQueries({ queryKey: ["coleta"] }); },
+    onSuccess: (r) => { setLastScan(r); qc.invalidateQueries({ queryKey: ["coleta"] }); qc.invalidateQueries({ queryKey: ["sample-events"] }); },
     onError: (e: Error) => setLastScan({ kind: "error", text: e.message }),
     onSettled: () => { setScanValue(""); scanRef.current?.focus(); },
   });
@@ -133,7 +134,7 @@ function ColetaPage() {
       }).in("id", pending.map((s) => s.id));
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); toast.success("Amostras coletadas"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["coleta"] }); qc.invalidateQueries({ queryKey: ["sample-events"] }); toast.success("Amostras coletadas"); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -201,7 +202,8 @@ function ColetaPage() {
                 </header>
                 <div className="grid gap-2">
                   {activeSamples.map((s: any) => (
-                    <div key={s.id} className="flex items-center gap-3 px-3 py-2 rounded-md border bg-background">
+                    <div key={s.id} className="rounded-md border bg-background">
+                    <div className="flex flex-wrap items-center gap-3 px-3 py-2">
                       <div className="tabular-nums text-xs w-10">#{s.sample_number}</div>
                       <div className="text-sm min-w-0 flex-1">
                         <div className="font-medium truncate">{s.material}</div>
@@ -221,6 +223,8 @@ function ColetaPage() {
                           </Button>
                         )}
                       </div>
+                    </div>
+                    <div className="px-3 pb-2"><SampleHistory sampleId={s.id} /></div>
                     </div>
                   ))}
                   {hasRejected && (

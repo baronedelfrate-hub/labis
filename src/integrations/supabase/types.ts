@@ -482,6 +482,7 @@ export type Database = {
           standard_notes: string | null
           tiss_codigo_procedimento: string | null
           updated_at: string
+          is_text: boolean
         }
         Insert: {
           code: string
@@ -499,6 +500,7 @@ export type Database = {
           standard_notes?: string | null
           tiss_codigo_procedimento?: string | null
           updated_at?: string
+          is_text?: boolean
         }
         Update: {
           code?: string
@@ -516,6 +518,7 @@ export type Database = {
           standard_notes?: string | null
           tiss_codigo_procedimento?: string | null
           updated_at?: string
+          is_text?: boolean
         }
         Relationships: [
           {
@@ -1289,6 +1292,51 @@ export type Database = {
           },
         ]
       }
+      result_templates: {
+        Row: {
+          body: string
+          company_id: string
+          created_at: string
+          exam_id: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          company_id: string
+          created_at?: string
+          exam_id?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          company_id?: string
+          created_at?: string
+          exam_id?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "result_templates_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       results: {
         Row: {
           company_id: string
@@ -1385,6 +1433,68 @@ export type Database = {
           {
             foreignKeyName: "results_reviewed_by_fkey"
             columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sample_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          event: string
+          id: string
+          order_id: string
+          sample_id: string
+          sector: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event: string
+          id?: string
+          order_id: string
+          sample_id: string
+          sector?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          order_id?: string
+          sample_id?: string
+          sector?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sample_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sample_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sample_events_sample_id_fkey"
+            columns: ["sample_id"]
+            isOneToOne: false
+            referencedRelation: "samples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sample_events_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

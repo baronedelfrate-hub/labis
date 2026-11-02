@@ -10,8 +10,15 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useMyRoles } from "@/hooks/useMyRoles";
 import { useCompanyId } from "@/hooks/useCompanyId";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, AlertTriangle } from "lucide-react";
 import { computeAgeMonths, findMatchingRange, type ReferenceRange } from "@/lib/exam-parameters";
+import { evaluateFormula, formatCalculated } from "@/lib/formula";
+import { getFlag, isPanic, flagLabel, parseNumeric, type ResultFlag } from "@/lib/result-flags";
+import { cn } from "@/lib/utils";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/resultados")({
   head: () => ({ meta: [{ title: "Resultados — LIS" }] }),
@@ -142,6 +149,24 @@ function ResultadosPage() {
   );
 }
 
+// Cor do campo conforme o alerta: pânico (vermelho), fora da faixa (âmbar) ou calculado (verde)
+function valueClass(flag: ResultFlag, calculated = false) {
+  if (isPanic(flag)) return "border-red-500 bg-red-50 text-red-900 font-semibold focus-visible:ring-red-500";
+  if (flag !== "normal") return "border-amber-500 bg-amber-50 text-amber-950 focus-visible:ring-amber-500";
+  if (calculated) return "border-emerald-300 bg-emerald-50 text-emerald-950";
+  return "";
+}
+
+function FlagNote({ flag }: { flag: ResultFlag }) {
+  if (flag === "normal") return null;
+  return (
+    <div className={cn("text-[11px] mt-0.5 flex items-center gap-1", isPanic(flag) ? "text-red-700 font-semibold" : "text-amber-800")}>
+      {isPanic(flag) && <AlertTriangle className="size-3" />}
+      {flagLabel(flag)}
+    </div>
+  );
+}
+
 function ResultItemCard({
   item, companyId, parameters, rangesByExam, rangesByParam, onSaved,
 }: {
@@ -158,16 +183,62 @@ function ResultItemCard({
   const [observation, setObservation] = useState<string>("");
   const [simpleValue, setSimpleValue] = useState<string>("");
   const [paramValues, setParamValues] = useState<Record<string, string>>({});
+  const [confirmPanic, setConfirmPanic] = useState(false);
 
   const isMulti = parameters.length > 0;
+
+  // Faixa de referência (e limites de pânico) que vale para este paciente
+  const matchFor = (paramId: string) => findMatchingRange(rangesByParam.get(paramId) ?? [], { sex, ageMonths });
+  const limitsOf = (m: ReferenceRange | null) => ({
+    min: m?.range_min, max: m?.range_max, panicMin: m?.panic_min, panicMax: m?.panic_max,
+  });
+
+  // Valores finais: o que foi digitado + campos calculados (recalculados a cada digitação)
+  const values = useMemo(() => {
+    const calc = parameters.filter((p) => p.formula?.trim());
+    const typed: Record<string, string> = {};
+    for (const p of parameters) if (!p.formula?.trim()) typed[p.id] = paramValues[p.id] ?? "";
+    const computed: Record<string, string> = {};
+    // várias passadas: um campo calculado pode usar outro campo calculado
+    for (let pass = 0; pass <= calc.length; pass++) {
+      const vars: Record<string, number | null> = {};
+      for (const p of parameters) {
+        if (!p.code) continue;
+        vars[p.code] = parseNumeric(p.formula?.trim() ? computed[p.id] : typed[p.id]);
+      }
+      let changed = false;
+      for (const c of calc) {
+        const r = evaluateFormula(c.formula, vars);
+        const str = r.value == null ? "" : formatCalculated(r.value, c.decimals);
+        if (computed[c.id] !== str) {
+          computed[c.id] = str;
+          changed = true;
+        }
+      }
+      if (!changed) break;
+    }
+    return { ...typed, ...computed } as Record<string, string>;
+  }, [parameters, paramValues]);
+
+  const simpleMatch = findMatchingRange(rangesByExam.get(item.exam_id) ?? [], { sex, ageMonths });
+  const simpleFlag = getFlag(simpleValue, limitsOf(simpleMatch));
+
+  // Itens em pânico (para o selo no cartão e a confirmação ao lançar)
+  const panicItems: { name: string; value: string; unit: string | null; flag: ResultFlag }[] = isMulti
+    ? parameters
+        .map((p) => ({ name: p.name, value: values[p.id] ?? "", unit: p.unit ?? null, flag: getFlag(values[p.id], limitsOf(matchFor(p.id))) }))
+        .filter((x) => isPanic(x.flag))
+    : isPanic(simpleFlag)
+      ? [{ name: item.exam?.name ?? "", value: simpleValue.trim(), unit: null, flag: simpleFlag }]
+      : [];
 
   const save = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
 
       if (isMulti) {
-        // valida ao menos um valor preenchido
-        const hasAny = Object.values(paramValues).some((v) => v?.trim());
+        // ao menos um valor digitado (campo calculado sozinho não conta)
+        const hasAny = parameters.some((p) => !p.formula?.trim() && paramValues[p.id]?.trim());
         if (!hasAny) throw new Error("Informe ao menos um valor");
 
         const { data: inserted, error } = await supabase
@@ -186,18 +257,19 @@ function ResultItemCard({
         const resultId = (inserted as any).id as string;
 
         const rows = parameters
-          .filter((p) => paramValues[p.id]?.trim())
+          .filter((p) => values[p.id]?.trim())
           .map((p) => {
-            const ranges = rangesByParam.get(p.id) ?? [];
-            const match = findMatchingRange(ranges, { sex, ageMonths });
+            const match = matchFor(p.id);
             return {
               result_id: resultId,
               exam_parameter_id: p.id,
-              value: paramValues[p.id].trim(),
+              value: values[p.id].trim(),
               unit: p.unit ?? null,
               reference_display_text: match?.display_text ?? null,
               reference_min: match?.range_min ?? null,
               reference_max: match?.range_max ?? null,
+              panic_min: match?.panic_min ?? null,
+              panic_max: match?.panic_max ?? null,
             };
           });
         if (rows.length > 0) {
@@ -206,16 +278,16 @@ function ResultItemCard({
         }
       } else {
         if (!simpleValue.trim()) throw new Error("Informe o valor");
-        const ranges = rangesByExam.get(item.exam_id) ?? [];
-        const match = findMatchingRange(ranges, { sex, ageMonths });
         const { error } = await supabase.from("results").insert({
           company_id: companyId!,
           order_item_id: item.id,
           value: simpleValue.trim(),
           observation: observation?.trim() || null,
           method: method?.trim() || null,
-          reference_min: match?.range_min ?? null,
-          reference_max: match?.range_max ?? null,
+          reference_min: simpleMatch?.range_min ?? null,
+          reference_max: simpleMatch?.range_max ?? null,
+          panic_min: simpleMatch?.panic_min ?? null,
+          panic_max: simpleMatch?.panic_max ?? null,
           entered_by: u.user?.id ?? null,
         } as never);
         if (error) throw error;
@@ -227,6 +299,12 @@ function ResultItemCard({
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Pânico exige confirmação explícita antes de gravar
+  const submit = () => {
+    if (panicItems.length > 0) setConfirmPanic(true);
+    else save.mutate();
+  };
 
   const grouped = useMemo(() => {
     const g = new Map<string, any[]>();
@@ -240,14 +318,21 @@ function ResultItemCard({
   }, [parameters]);
 
   return (
-    <div className="rounded-md border bg-card p-4 space-y-3">
-      <div className="flex items-start gap-4">
-        <div className="text-sm flex-1">
+    <div className={cn("rounded-md border bg-card p-4 space-y-3", panicItems.length > 0 && "border-red-400 ring-1 ring-red-300")}>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="text-sm flex-1 min-w-[180px]">
           <div className="text-xs text-muted-foreground">#{item.order?.order_number} · {item.exam?.code}</div>
-          <div className="font-medium">{item.exam?.name}</div>
+          <div className="font-medium flex flex-wrap items-center gap-2">
+            {item.exam?.name}
+            {panicItems.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                <AlertTriangle className="size-3" />PÂNICO
+              </span>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground">{patient?.name}{sex ? ` · ${sex}` : ""}{ageMonths != null ? ` · ${Math.floor(ageMonths/12)}a` : ""}</div>
         </div>
-        <div className="min-w-[200px]">
+        <div className="w-full sm:w-auto sm:min-w-[200px]">
           <label className="text-xs text-muted-foreground">Método</label>
           <Input value={method} onChange={(e) => setMethod(e.target.value)} placeholder={item.exam?.default_method ?? "Método"} />
         </div>
@@ -259,18 +344,32 @@ function ResultItemCard({
             <div key={groupLabel || "__default__"} className="space-y-1">
               {groupLabel && <div className="text-xs font-medium text-muted-foreground mt-1">{groupLabel}</div>}
               <div className="rounded border overflow-hidden">
-                <div className="grid grid-cols-[1fr_140px_60px_1fr] gap-2 bg-muted/50 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                <div className="hidden sm:grid grid-cols-[1fr_140px_60px_1fr] gap-2 bg-muted/50 px-3 py-1 text-[11px] font-medium text-muted-foreground">
                   <div>Parâmetro</div><div>Valor</div><div>Unid.</div><div>Referência</div>
                 </div>
                 {(params as any[]).map((p) => {
-                  const ranges = rangesByParam.get(p.id) ?? [];
-                  const match = findMatchingRange(ranges, { sex, ageMonths });
+                  const match = matchFor(p.id);
+                  const isCalc = !!p.formula?.trim();
+                  const flag = getFlag(values[p.id], limitsOf(match));
                   return (
-                    <div key={p.id} className="grid grid-cols-[1fr_140px_60px_1fr] gap-2 px-3 py-1.5 items-center border-t text-sm">
-                      <div>{p.name}</div>
-                      <Input value={paramValues[p.id] ?? ""} onChange={(e) => setParamValues((v) => ({ ...v, [p.id]: e.target.value }))} />
-                      <div className="text-xs text-muted-foreground">{p.unit ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{match?.display_text ?? "—"}</div>
+                    <div key={p.id} className="grid grid-cols-[1fr_130px] sm:grid-cols-[1fr_140px_60px_1fr] gap-x-2 gap-y-0.5 px-3 py-1.5 items-start border-t text-sm">
+                      <div className="pt-2">
+                        {p.name}
+                        {isCalc && <span className="ml-1 text-[10px] text-emerald-700" title={`Calculado: ${p.formula}`}>ƒ calculado</span>}
+                      </div>
+                      <div>
+                        <Input
+                          value={values[p.id] ?? ""}
+                          readOnly={isCalc}
+                          tabIndex={isCalc ? -1 : undefined}
+                          placeholder={isCalc ? "auto" : undefined}
+                          className={valueClass(flag, isCalc)}
+                          onChange={(e) => setParamValues((v) => ({ ...v, [p.id]: e.target.value }))}
+                        />
+                        <FlagNote flag={flag} />
+                      </div>
+                      <div className="text-xs text-muted-foreground sm:pt-2.5">{p.unit ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground sm:pt-2.5 col-span-2 sm:col-span-1">{match?.display_text ?? "—"}</div>
                     </div>
                   );
                 })}
@@ -279,13 +378,14 @@ function ResultItemCard({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-[1fr_1fr] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-3">
           <div>
             <label className="text-xs text-muted-foreground">Valor</label>
-            <Input value={simpleValue} onChange={(e) => setSimpleValue(e.target.value)} placeholder="Ex: 4.7" />
+            <Input value={simpleValue} className={valueClass(simpleFlag)} onChange={(e) => setSimpleValue(e.target.value)} placeholder="Ex: 4.7" />
+            <FlagNote flag={simpleFlag} />
           </div>
-          <div className="text-xs text-muted-foreground self-end pb-2">
-            Ref: {findMatchingRange(rangesByExam.get(item.exam_id) ?? [], { sex, ageMonths })?.display_text ?? "—"}
+          <div className="text-xs text-muted-foreground sm:self-end pb-2">
+            Ref: {simpleMatch?.display_text ?? "—"}
           </div>
         </div>
       )}
@@ -296,8 +396,40 @@ function ResultItemCard({
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>Lançar</Button>
+        <Button onClick={submit} disabled={save.isPending} variant={panicItems.length > 0 ? "destructive" : "default"}>
+          Lançar
+        </Button>
       </div>
+
+      <AlertDialog open={confirmPanic} onOpenChange={setConfirmPanic}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-700">
+              <AlertTriangle className="size-5" />Valor de pânico
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Estes valores indicam risco de vida. Confira se foram digitados corretamente antes de lançar:</p>
+                <ul className="rounded border border-red-200 bg-red-50 p-2 space-y-1 text-red-900">
+                  {panicItems.map((x, i) => (
+                    <li key={i} className="flex justify-between gap-3">
+                      <span>{x.name}</span>
+                      <span className="font-semibold tabular-nums">{x.value}{x.unit ? ` ${x.unit}` : ""} · {flagLabel(x.flag).replace("PÂNICO — ", "")}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p>Resultados de pânico devem ser comunicados conforme o protocolo do laboratório.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar e conferir</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => save.mutate()}>
+              Confirmar e lançar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -20,6 +20,8 @@ export type ReferenceRange = {
   age_max_months: number | null;
   range_min: number | null;
   range_max: number | null;
+  panic_min?: number | null;
+  panic_max?: number | null;
   category_label: string | null;
   display_text: string;
 };

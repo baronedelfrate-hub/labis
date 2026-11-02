@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, LogOut } from "lucide-react";
 import { getPortalToken, setPortalToken } from "@/lib/portal-session";
+import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
 
 export const Route = createFileRoute("/portal_/laudo")({
   ssr: false,
@@ -122,7 +123,7 @@ function PortalLaudoPage() {
                     <tr key={i.id}>
                       <td className="tabular-nums">{i.exam?.code}</td>
                       <td>{i.exam?.name}</td>
-                      <td className="tabular-nums font-medium">{r.value}</td>
+                      <td className="tabular-nums font-medium"><FlaggedValue value={r.value} limits={limitsOf(r)} showPanic={false} /></td>
                       <td>{r.unit ?? "—"}</td>
                       <td className="tabular-nums">{ref}</td>
                       <td>{r.observation ?? ""}</td>
@@ -192,7 +193,7 @@ function ExamBlock({ item, result, groups, collectionDate }: { item: any; result
             ...values.map((v: any) => (
               <tr key={v.id}>
                 <td>{v.parameter?.name ?? "—"}</td>
-                <td className="tabular-nums font-medium">{v.value}</td>
+                <td className="tabular-nums font-medium"><FlaggedValue value={v.value} limits={limitsOf(v)} showPanic={false} /></td>
                 <td>{v.unit ?? v.parameter?.unit ?? "—"}</td>
                 <td>{v.reference_display_text ?? "—"}</td>
               </tr>

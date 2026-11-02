@@ -112,7 +112,13 @@ function OrderDetail() {
         title={`Pedido #${o.order_number}`}
         description={`Aberto em ${new Date(o.order_date).toLocaleDateString("pt-BR")}`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/pedidos/$orderId/etiquetas" params={{ orderId: o.id }}>
+                <Printer className="size-4 mr-1" />
+                Etiquetas
+              </Link>
+            </Button>
             {isParticular && (
               <Button variant="secondary" onClick={() => setPayOpen(true)} disabled={balance <= 0}>
                 <DollarSign className="size-4 mr-1" />

@@ -417,6 +417,9 @@ export type Database = {
           value_type: Database["public"]["Enums"]["exam_value_type"]
           decimals: number | null
           formula: string | null
+          counts_as_result: boolean
+          extra_line_after: string | null
+          extra_line_before: string | null
         }
         Insert: {
           code?: string | null
@@ -431,6 +434,9 @@ export type Database = {
           value_type?: Database["public"]["Enums"]["exam_value_type"]
           decimals?: number | null
           formula?: string | null
+          counts_as_result?: boolean
+          extra_line_after?: string | null
+          extra_line_before?: string | null
         }
         Update: {
           code?: string | null
@@ -445,6 +451,9 @@ export type Database = {
           value_type?: Database["public"]["Enums"]["exam_value_type"]
           decimals?: number | null
           formula?: string | null
+          counts_as_result?: boolean
+          extra_line_after?: string | null
+          extra_line_before?: string | null
         }
         Relationships: [
           {
@@ -1230,6 +1239,8 @@ export type Database = {
           value: string
           panic_max: number | null
           panic_min: number | null
+          extra_after: string | null
+          extra_before: string | null
         }
         Insert: {
           created_at?: string
@@ -1243,6 +1254,8 @@ export type Database = {
           value: string
           panic_max?: number | null
           panic_min?: number | null
+          extra_after?: string | null
+          extra_before?: string | null
         }
         Update: {
           created_at?: string
@@ -1256,6 +1269,8 @@ export type Database = {
           value?: string
           panic_max?: number | null
           panic_min?: number | null
+          extra_after?: string | null
+          extra_before?: string | null
         }
         Relationships: [
           {

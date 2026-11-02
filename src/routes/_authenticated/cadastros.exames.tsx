@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanyId } from "@/hooks/useCompanyId";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
@@ -131,10 +131,13 @@ function checkFormula(formula: string, code: string | null, selfId: string | nul
 function ParametersSection({ examId }: { examId: string }) {
   const qc = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [draft, setDraft] = useState<any>({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "" });
+  const [draft, setDraft] = useState<any>({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "", counts_as_result: true, extra_line_before: "", extra_line_after: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFormula, setEditFormula] = useState("");
   const [editDecimals, setEditDecimals] = useState("");
+  const [editCounts, setEditCounts] = useState(true);
+  const [editBefore, setEditBefore] = useState("");
+  const [editAfter, setEditAfter] = useState("");
 
   const { data = [] } = useQuery({
     queryKey: ["exam-parameters", examId],
@@ -164,19 +167,22 @@ function ParametersSection({ examId }: { examId: string }) {
         group_label: draft.group_label?.trim() || null,
         formula,
         decimals: formula ? decimals : null,
+        counts_as_result: draft.counts_as_result !== false,
+        extra_line_before: draft.extra_line_before?.trim() || null,
+        extra_line_after: draft.extra_line_after?.trim() || null,
       } as never);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["exam-parameters", examId] });
-      setDraft({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "" });
+      setDraft({ name: "", unit: "", display_order: 0, value_type: "numeric", group_label: "", code: "", formula: "", decimals: "", counts_as_result: true, extra_line_before: "", extra_line_after: "" });
       setShowAdd(false);
       toast.success("Parâmetro adicionado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const saveFormula = useMutation({
+  const saveOptions = useMutation({
     mutationFn: async (p: any) => {
       const formula = editFormula.trim() || null;
       if (formula) {
@@ -185,14 +191,20 @@ function ParametersSection({ examId }: { examId: string }) {
       }
       const { error } = await supabase
         .from("exam_parameters")
-        .update({ formula, decimals: formula ? parseDecimals(editDecimals) : null } as never)
+        .update({
+          formula,
+          decimals: formula ? parseDecimals(editDecimals) : null,
+          counts_as_result: editCounts,
+          extra_line_before: editBefore.trim() || null,
+          extra_line_after: editAfter.trim() || null,
+        } as never)
         .eq("id", p.id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["exam-parameters", examId] });
       setEditingId(null);
-      toast.success("Fórmula salva");
+      toast.success("Opções do campo salvas");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -224,39 +236,62 @@ function ParametersSection({ examId }: { examId: string }) {
                 <div className="text-muted-foreground">{p.value_type}</div>
                 <div className="text-muted-foreground truncate">{p.group_label ?? ""}</div>
                 <div className="flex">
-                  {p.value_type === "numeric" && (
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      title="Fórmula (campo calculado)"
-                      className={p.formula ? "text-emerald-700" : "text-muted-foreground"}
-                      onClick={() => {
-                        setEditingId(editingId === p.id ? null : p.id);
-                        setEditFormula(p.formula ?? "");
-                        setEditDecimals(p.decimals != null ? String(p.decimals) : "");
-                      }}
-                    >
-                      <span className="font-serif italic text-sm leading-none">ƒ</span>
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    title="Opções do campo: fórmula, conta como resultado e linhas extras do laudo"
+                    className={p.formula || p.counts_as_result === false || p.extra_line_before || p.extra_line_after ? "text-emerald-700" : "text-muted-foreground"}
+                    onClick={() => {
+                      setEditingId(editingId === p.id ? null : p.id);
+                      setEditFormula(p.formula ?? "");
+                      setEditDecimals(p.decimals != null ? String(p.decimals) : "");
+                      setEditCounts(p.counts_as_result !== false);
+                      setEditBefore(p.extra_line_before ?? "");
+                      setEditAfter(p.extra_line_after ?? "");
+                    }}
+                  >
+                    <SlidersHorizontal className="size-3.5" />
+                  </Button>
                   <Button type="button" size="icon" variant="ghost" onClick={() => del.mutate(p.id)}><Trash2 className="size-3 text-destructive" /></Button>
                 </div>
               </div>
-              {p.formula && editingId !== p.id && (
-                <div className="text-[11px] text-emerald-800 pl-[48px]">
-                  Calculado: <span className="font-mono">{p.formula}</span>{p.decimals != null ? ` · ${p.decimals} casa(s) decimal(is)` : ""}
+              {editingId !== p.id && (p.formula || p.counts_as_result === false || p.extra_line_before || p.extra_line_after) && (
+                <div className="text-[11px] pl-[48px] space-y-0.5">
+                  {p.formula && (
+                    <div className="text-emerald-800">
+                      Calculado: <span className="font-mono">{p.formula}</span>{p.decimals != null ? ` · ${p.decimals} casa(s) decimal(is)` : ""}
+                    </div>
+                  )}
+                  {p.counts_as_result === false && <div className="text-amber-800">Não conta como resultado (sozinho, não completa o exame)</div>}
+                  {p.extra_line_before && <div className="text-muted-foreground">Linha antes no laudo: “{p.extra_line_before}”</div>}
+                  {p.extra_line_after && <div className="text-muted-foreground">Linha depois no laudo: “{p.extra_line_after}”</div>}
                 </div>
               )}
               {editingId === p.id && (
-                <div className="grid grid-cols-[1fr_110px_auto] gap-2 items-center pl-[48px] pb-1">
-                  <Input className="h-8 font-mono text-xs" placeholder="Ex.: TOTAL - DIRETA (vazio = digitado)" value={editFormula} onChange={e => setEditFormula(e.target.value)} />
-                  <Input className="h-8 text-xs" type="number" min={0} max={6} placeholder="Casas decimais" value={editDecimals} onChange={e => setEditDecimals(e.target.value)} />
-                  <div className="flex gap-1">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-2 pl-[48px] pb-1">
+                  {p.value_type === "numeric" && (
+                    <>
+                      <Input className="h-8 font-mono text-xs" placeholder="Fórmula, ex.: TOTAL - DIRETA (vazio = digitado)" value={editFormula} onChange={e => setEditFormula(e.target.value)} />
+                      <Input className="h-8 text-xs" type="number" min={0} max={6} placeholder="Casas decimais" value={editDecimals} onChange={e => setEditDecimals(e.target.value)} />
+                      <div className="sm:col-span-2 text-[11px] text-muted-foreground">{FORMULA_HELP}</div>
+                    </>
+                  )}
+                  <label className="sm:col-span-2 flex items-start gap-2 text-xs">
+                    <Checkbox checked={editCounts} onCheckedChange={v => setEditCounts(!!v)} className="mt-0.5" />
+                    <span>
+                      <b>Conta como resultado.</b> Desmarque para campos que só complementam (ex.: observação antes do resultado): se o único campo
+                      preenchido for deste tipo, o exame ainda não é considerado com resultado.
+                    </span>
+                  </label>
+                  <Input className="h-8 text-xs" placeholder="Linha extra ANTES do campo no laudo (opcional)" value={editBefore} onChange={e => setEditBefore(e.target.value)} />
+                  <div className="hidden sm:block" />
+                  <Input className="h-8 text-xs" placeholder="Linha extra DEPOIS do campo no laudo (opcional)" value={editAfter} onChange={e => setEditAfter(e.target.value)} />
+                  <div className="hidden sm:block" />
+                  <div className="sm:col-span-2 flex gap-1 justify-end">
                     <Button type="button" size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancelar</Button>
-                    <Button type="button" size="sm" onClick={() => saveFormula.mutate(p)} disabled={saveFormula.isPending}>Salvar</Button>
+                    <Button type="button" size="sm" onClick={() => saveOptions.mutate(p)} disabled={saveOptions.isPending}>Salvar</Button>
                   </div>
-                  <div className="col-span-3 text-[11px] text-muted-foreground">{FORMULA_HELP}</div>
                 </div>
               )}
             </div>
@@ -285,6 +320,12 @@ function ParametersSection({ examId }: { examId: string }) {
               {draft.formula?.trim() && <div className="col-span-2 text-[11px] text-muted-foreground">{FORMULA_HELP}</div>}
             </>
           )}
+          <Input placeholder="Linha extra ANTES no laudo (opcional)" value={draft.extra_line_before} onChange={e => setDraft({ ...draft, extra_line_before: e.target.value })} />
+          <Input placeholder="Linha extra DEPOIS no laudo (opcional)" value={draft.extra_line_after} onChange={e => setDraft({ ...draft, extra_line_after: e.target.value })} />
+          <label className="col-span-2 flex items-center gap-2 text-xs">
+            <Checkbox checked={draft.counts_as_result !== false} onCheckedChange={v => setDraft({ ...draft, counts_as_result: !!v })} />
+            Conta como resultado (desmarque para campos que só complementam o exame)
+          </label>
           <div className="col-span-2 flex gap-2 justify-end">
             <Button type="button" size="sm" variant="outline" onClick={() => setShowAdd(false)}>Cancelar</Button>
             <Button type="button" size="sm" onClick={() => add.mutate()} disabled={add.isPending}>Salvar parâmetro</Button>

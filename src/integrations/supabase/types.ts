@@ -483,6 +483,8 @@ export type Database = {
           tiss_codigo_procedimento: string | null
           updated_at: string
           is_text: boolean
+          labels_per_sample: number
+          samples_count: number
         }
         Insert: {
           code: string
@@ -501,6 +503,8 @@ export type Database = {
           tiss_codigo_procedimento?: string | null
           updated_at?: string
           is_text?: boolean
+          labels_per_sample?: number
+          samples_count?: number
         }
         Update: {
           code?: string
@@ -519,6 +523,8 @@ export type Database = {
           tiss_codigo_procedimento?: string | null
           updated_at?: string
           is_text?: boolean
+          labels_per_sample?: number
+          samples_count?: number
         }
         Relationships: [
           {
@@ -644,6 +650,46 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_item_samples: {
+        Row: {
+          company_id: string
+          order_item_id: string
+          sample_id: string
+        }
+        Insert: {
+          company_id: string
+          order_item_id: string
+          sample_id: string
+        }
+        Update: {
+          company_id?: string
+          order_item_id?: string
+          sample_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_samples_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_samples_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_item_samples_sample_id_fkey"
+            columns: ["sample_id"]
+            isOneToOne: false
+            referencedRelation: "samples"
             referencedColumns: ["id"]
           },
         ]
@@ -1517,6 +1563,7 @@ export type Database = {
           sector: string | null
           status: Database["public"]["Enums"]["sample_status"]
           updated_at: string
+          material_seq: number
         }
         Insert: {
           collected_at?: string | null
@@ -1533,6 +1580,7 @@ export type Database = {
           sector?: string | null
           status?: Database["public"]["Enums"]["sample_status"]
           updated_at?: string
+          material_seq?: number
         }
         Update: {
           collected_at?: string | null
@@ -1549,6 +1597,7 @@ export type Database = {
           sector?: string | null
           status?: Database["public"]["Enums"]["sample_status"]
           updated_at?: string
+          material_seq?: number
         }
         Relationships: [
           {

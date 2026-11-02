@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
 import { validateFormula, findFormulaCycle } from "@/lib/formula";
 
-type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean };
+type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
 
 export const Route = createFileRoute("/_authenticated/cadastros/exames")({
   head: () => ({ meta: [{ title: "Exames — LIS" }] }),
@@ -30,7 +30,7 @@ function ExamesPage() {
       reopenOnCreate
       orderBy={{ column: "name" }}
       searchColumn="name" searchPlaceholder="Buscar por nome..."
-      emptyValue={{ code: "", name: "", sector: "", material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, is_text: false, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
+      emptyValue={{ code: "", name: "", sector: "", material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, is_text: false, samples_count: 1, labels_per_sample: 1, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
       itemLabel={r => r.name}
       columns={[
         { key: "code", label: "Código", className: "w-24 tabular-nums" },
@@ -51,6 +51,16 @@ function ExamesPage() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Prazo (dias)"><Input type="number" min={0} value={value.deadline_days ?? 1} onChange={e => setValue({ ...value, deadline_days: Number(e.target.value) })} /></Field>
             <Field label="Jejum (horas)"><Input type="number" min={0} value={value.fasting_hours ?? 0} onChange={e => setValue({ ...value, fasting_hours: Number(e.target.value) })} /></Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Nº de amostras (tubos)">
+              <Input type="number" min={1} max={9} value={value.samples_count ?? 1} onChange={e => setValue({ ...value, samples_count: Math.min(9, Math.max(1, Number(e.target.value) || 1)) })} />
+              <span className="text-[11px] text-muted-foreground">Mais de 1 quando o exame precisa de coletas separadas (ex.: glicose em jejum e pós-prandial). Aparece com + na etiqueta.</span>
+            </Field>
+            <Field label="Etiquetas por amostra">
+              <Input type="number" min={1} max={5} value={value.labels_per_sample ?? 1} onChange={e => setValue({ ...value, labels_per_sample: Math.min(5, Math.max(1, Number(e.target.value) || 1)) })} />
+              <span className="text-[11px] text-muted-foreground">Mais de 1 quando a amostra é dividida em partes. Aparece com ^ na etiqueta.</span>
+            </Field>
           </div>
           <Field label="Preparo"><Input value={value.preparation_instructions ?? ""} onChange={e => setValue({ ...value, preparation_instructions: e.target.value })} /></Field>
           <Field label="Método padrão"><Input value={value.default_method ?? ""} onChange={e => setValue({ ...value, default_method: e.target.value })} placeholder="Ex: Colorimétrico, Enzimático..." /></Field>

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { CheckCheck, PackageCheck, XCircle, AlertTriangle, Printer, ScanBarcode, CheckCircle2 } from "lucide-react";
-import { parseSampleBarcode, sectorCodeFor } from "@/lib/sample-barcode";
+import { parseSampleBarcode, sectorCodeFor, candidateSampleNumbers } from "@/lib/sample-barcode";
 import { SampleHistory } from "@/components/SampleHistory";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ function ColetaPage() {
     queryFn: async () => {
       const { data: orders, error } = await supabase
         .from("orders")
-        .select("id, order_number, is_urgent, patient:patients(name,code), samples:samples(id,sample_number,material,sector,status,rejection_reason,collected_at)")
+        .select("id, order_number, is_urgent, patient:patients(name,code), samples:samples(id,sample_number,material,material_seq,sector,status,rejection_reason,collected_at)")
         .eq("order_date", date)
         .order("order_number", { ascending: false });
       if (error) throw error;
@@ -99,13 +99,17 @@ function ColetaPage() {
       const codes = new Map<string, number>((sectors ?? []).map((x: any) => [x.sector as string, x.code as number]));
       const { data: rows, error } = await supabase
         .from("samples")
-        .select("id, sample_number, sector, material, status, orders!inner(order_number, patient:patients(name))")
-        .eq("sample_number", parsed.sample)
+        .select("id, sample_number, sector, material, material_seq, status, orders!inner(order_number, patient:patients(name))")
+        .in("sample_number", candidateSampleNumbers(parsed.sample)) // o código só tem 1 dígito de amostra (1 a 9)
         .eq("orders.order_number", parsed.orderSeq);
       if (error) throw error;
-      const s = (rows ?? [])[0] as any;
-      if (!s) throw new Error(`Amostra não encontrada (pedido ${parsed.orderSeq}, amostra ${parsed.sample}).`);
-      const who = `#${s.orders?.order_number} · ${s.orders?.patient?.name ?? ""} · ${s.material}${s.sector ? ` (${s.sector})` : ""}`;
+      const found = (rows ?? []) as any[];
+      if (found.length === 0) throw new Error(`Amostra não encontrada (pedido ${parsed.orderSeq}, amostra ${parsed.sample}).`);
+      // o setor do código tem que ser o da amostra; entre as que servem, prefere a que não foi rejeitada
+      const sameSector = found.filter((r) => sectorCodeFor(r.sector, codes) === parsed.sectorCode);
+      const s = sameSector.find((r) => r.status !== "rejeitada") ?? sameSector[0] ?? found[0];
+      const tube = found.filter((r) => r.material === s.material && r.status !== "rejeitada").length > 1 ? ` · tubo ${s.material_seq}` : "";
+      const who = `#${s.orders?.order_number} · ${s.orders?.patient?.name ?? ""} · ${s.material}${tube}${s.sector ? ` (${s.sector})` : ""}`;
       if (sectorCodeFor(s.sector, codes) !== parsed.sectorCode) {
         throw new Error(`O setor do código (${String(parsed.sectorCode).padStart(2, "0")}) não confere com o da amostra (${s.sector ?? "sem setor"}). ${who}`);
       }
@@ -206,7 +210,12 @@ function ColetaPage() {
                     <div className="flex flex-wrap items-center gap-3 px-3 py-2">
                       <div className="tabular-nums text-xs w-10">#{s.sample_number}</div>
                       <div className="text-sm min-w-0 flex-1">
-                        <div className="font-medium truncate">{s.material}</div>
+                        <div className="font-medium truncate">
+                          {s.material}
+                          {activeSamples.filter((x) => x.material === s.material).length > 1 && (
+                            <span className="ml-1 text-xs font-normal text-muted-foreground">· tubo {s.material_seq}</span>
+                          )}
+                        </div>
                         <div className="text-xs text-muted-foreground">{s.sector ?? "sem setor"}</div>
                       </div>
                       <Badge variant="outline" className={cn(sampleBadge[s.status])}>{s.status}</Badge>

@@ -7,6 +7,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPortalAccessInfo } from "@/lib/portal.functions";
 import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
+import { TextExamBlock } from "@/components/TextExamBlock";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/laudo")({
   ssr: false,
@@ -40,7 +41,7 @@ function LaudoPage() {
       if (error) throw error;
 
       const { data: items } = await supabase.from("order_items")
-        .select("id,status,exam_id,exam:exams(code,name,material,sector,default_method,standard_notes)")
+        .select("id,status,exam_id,exam:exams(code,name,material,sector,default_method,standard_notes,is_text)")
         .eq("order_id", orderId);
       const itemIds = (items ?? []).map(i => i.id);
       const { data: results } = itemIds.length
@@ -118,7 +119,9 @@ function LaudoPage() {
     valuesByResult.set(v.result_id, arr);
   }
   const releasedItems = (data.items as any[]).filter(i => resultByItem.has(i.id));
-  const simpleItems = releasedItems.filter(i => !(valuesByResult.get(resultByItem.get(i.id).id)?.length));
+  const isTextItem = (i: any) => !!i.exam?.is_text && !(valuesByResult.get(resultByItem.get(i.id).id)?.length);
+  const textItems = releasedItems.filter(isTextItem);
+  const simpleItems = releasedItems.filter(i => !isTextItem(i) && !(valuesByResult.get(resultByItem.get(i.id).id)?.length));
   const composedItems = releasedItems.filter(i => (valuesByResult.get(resultByItem.get(i.id).id)?.length ?? 0) > 0);
   const releasedAt = data.results.length
     ? new Date(Math.max(...data.results.map((r: any) => new Date(r.released_at).getTime())))
@@ -211,6 +214,10 @@ function LaudoPage() {
             </table>
           </section>
         )}
+
+        {textItems.map((i: any) => (
+          <TextExamBlock key={i.id} item={i} result={resultByItem.get(i.id)} collectionDate={o.collection_date} />
+        ))}
 
         {composedItems.map((i: any) => {
           const r = resultByItem.get(i.id);

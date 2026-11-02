@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/portal-laudo")({
 
         const { data: items } = await supabaseAdmin
           .from("order_items")
-          .select("id,status,exam_id,exam:exams(code,name,material,sector,default_method,standard_notes)")
+          .select("id,status,exam_id,exam:exams(code,name,material,sector,default_method,standard_notes,is_text)")
           .eq("order_id", payload.order_id);
         const itemIds = (items ?? []).map((i: { id: string }) => i.id);
         const { data: results } = itemIds.length

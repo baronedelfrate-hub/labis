@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, LogOut } from "lucide-react";
 import { getPortalToken, setPortalToken } from "@/lib/portal-session";
 import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
+import { TextExamBlock } from "@/components/TextExamBlock";
 
 export const Route = createFileRoute("/portal_/laudo")({
   ssr: false,
@@ -43,7 +44,9 @@ function PortalLaudoPage() {
     valuesByResult.set(v.result_id, arr);
   }
   const releasedItems = (data.items as any[]).filter((i) => resultByItem.has(i.id));
-  const simpleItems = releasedItems.filter((i) => !(valuesByResult.get(resultByItem.get(i.id).id)?.length));
+  const isTextItem = (i: any) => !!i.exam?.is_text && !(valuesByResult.get(resultByItem.get(i.id).id)?.length);
+  const textItems = releasedItems.filter(isTextItem);
+  const simpleItems = releasedItems.filter((i) => !isTextItem(i) && !(valuesByResult.get(resultByItem.get(i.id).id)?.length));
   const composedItems = releasedItems.filter((i) => (valuesByResult.get(resultByItem.get(i.id).id)?.length ?? 0) > 0);
   const releasedAt = data.results.length
     ? new Date(Math.max(...data.results.map((r: any) => new Date(r.released_at).getTime())))
@@ -134,6 +137,10 @@ function PortalLaudoPage() {
             </table>
           </section>
         )}
+
+        {textItems.map((i: any) => (
+          <TextExamBlock key={i.id} item={i} result={resultByItem.get(i.id)} collectionDate={o.collection_date} />
+        ))}
 
         {composedItems.map((i: any) => {
           const r = resultByItem.get(i.id);

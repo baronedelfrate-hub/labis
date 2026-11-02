@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
 import { validateFormula, findFormulaCycle } from "@/lib/formula";
 
-type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null };
+type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean };
 
 export const Route = createFileRoute("/_authenticated/cadastros/exames")({
   head: () => ({ meta: [{ title: "Exames — LIS" }] }),
@@ -30,7 +30,7 @@ function ExamesPage() {
       reopenOnCreate
       orderBy={{ column: "name" }}
       searchColumn="name" searchPlaceholder="Buscar por nome..."
-      emptyValue={{ code: "", name: "", sector: "", material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
+      emptyValue={{ code: "", name: "", sector: "", material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, is_text: false, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
       itemLabel={r => r.name}
       columns={[
         { key: "code", label: "Código", className: "w-24 tabular-nums" },
@@ -57,6 +57,13 @@ function ExamesPage() {
           <Field label="Observações padrão do laudo"><Textarea rows={2} value={value.standard_notes ?? ""} onChange={e => setValue({ ...value, standard_notes: e.target.value })} /></Field>
           <Field label="Código TUSS (TISS)"><Input value={value.tiss_codigo_procedimento ?? ""} onChange={e => setValue({ ...value, tiss_codigo_procedimento: e.target.value })} /></Field>
           <label className="flex items-center gap-2 text-sm"><Checkbox checked={value.is_urgent_allowed ?? true} onCheckedChange={v => setValue({ ...value, is_urgent_allowed: !!v })} /> Permite urgência</label>
+          <label className="flex items-start gap-2 text-sm">
+            <Checkbox className="mt-0.5" checked={value.is_text ?? false} onCheckedChange={v => setValue({ ...value, is_text: !!v })} />
+            <span>
+              <b>Exame tipo texto</b> — o resultado é escrito em texto livre (ex.: diagnóstico por imagem), com apoio dos textos-modelo.
+              <span className="block text-xs text-muted-foreground">Vale para exames sem parâmetros. Em exames com parâmetros esta opção é ignorada.</span>
+            </span>
+          </label>
 
           <LegacyImportPrompt code={value.code} examId={value.id} />
 

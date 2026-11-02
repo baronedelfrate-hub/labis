@@ -25,6 +25,7 @@ import { Route as AuthenticatedCadastrosGruposExamesRouteImport } from './routes
 import { Route as AuthenticatedCadastrosMedicosRouteImport } from './routes/_authenticated/cadastros.medicos'
 import { Route as AuthenticatedCadastrosPacientesRouteImport } from './routes/_authenticated/cadastros.pacientes'
 import { Route as AuthenticatedCadastrosTabelasPrecoRouteImport } from './routes/_authenticated/cadastros.tabelas-preco'
+import { Route as AuthenticatedCadastrosTextosModeloRouteImport } from './routes/_authenticated/cadastros.textos-modelo'
 import { Route as AuthenticatedCadastrosUnidadesRouteImport } from './routes/_authenticated/cadastros.unidades'
 import { Route as AuthenticatedCadastrosUsuariosRouteImport } from './routes/_authenticated/cadastros.usuarios'
 import { Route as AuthenticatedFinanceiroIndexRouteImport } from './routes/_authenticated/financeiro.index'
@@ -126,6 +127,12 @@ const AuthenticatedCadastrosTabelasPrecoRoute =
     path: '/cadastros/tabelas-preco',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCadastrosTextosModeloRoute =
+  AuthenticatedCadastrosTextosModeloRouteImport.update({
+    id: '/cadastros/textos-modelo',
+    path: '/cadastros/textos-modelo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCadastrosUnidadesRoute =
   AuthenticatedCadastrosUnidadesRouteImport.update({
     id: '/cadastros/unidades',
@@ -225,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
+  '/cadastros/textos-modelo': typeof AuthenticatedCadastrosTextosModeloRoute
   '/cadastros/unidades': typeof AuthenticatedCadastrosUnidadesRoute
   '/cadastros/usuarios': typeof AuthenticatedCadastrosUsuariosRoute
   '/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
+  '/cadastros/textos-modelo': typeof AuthenticatedCadastrosTextosModeloRoute
   '/cadastros/unidades': typeof AuthenticatedCadastrosUnidadesRoute
   '/cadastros/usuarios': typeof AuthenticatedCadastrosUsuariosRoute
   '/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
@@ -289,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/_authenticated/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/_authenticated/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
+  '/_authenticated/cadastros/textos-modelo': typeof AuthenticatedCadastrosTextosModeloRoute
   '/_authenticated/cadastros/unidades': typeof AuthenticatedCadastrosUnidadesRoute
   '/_authenticated/cadastros/usuarios': typeof AuthenticatedCadastrosUsuariosRoute
   '/_authenticated/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/cadastros/medicos'
     | '/cadastros/pacientes'
     | '/cadastros/tabelas-preco'
+    | '/cadastros/textos-modelo'
     | '/cadastros/unidades'
     | '/cadastros/usuarios'
     | '/financeiro/convenios'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/cadastros/medicos'
     | '/cadastros/pacientes'
     | '/cadastros/tabelas-preco'
+    | '/cadastros/textos-modelo'
     | '/cadastros/unidades'
     | '/cadastros/usuarios'
     | '/financeiro/convenios'
@@ -385,6 +397,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros/medicos'
     | '/_authenticated/cadastros/pacientes'
     | '/_authenticated/cadastros/tabelas-preco'
+    | '/_authenticated/cadastros/textos-modelo'
     | '/_authenticated/cadastros/unidades'
     | '/_authenticated/cadastros/usuarios'
     | '/_authenticated/financeiro/convenios'
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadastrosTabelasPrecoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cadastros/textos-modelo': {
+      id: '/_authenticated/cadastros/textos-modelo'
+      path: '/cadastros/textos-modelo'
+      fullPath: '/cadastros/textos-modelo'
+      preLoaderRoute: typeof AuthenticatedCadastrosTextosModeloRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cadastros/unidades': {
       id: '/_authenticated/cadastros/unidades'
       path: '/cadastros/unidades'
@@ -638,6 +658,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosMedicosRoute: typeof AuthenticatedCadastrosMedicosRoute
   AuthenticatedCadastrosPacientesRoute: typeof AuthenticatedCadastrosPacientesRoute
   AuthenticatedCadastrosTabelasPrecoRoute: typeof AuthenticatedCadastrosTabelasPrecoRoute
+  AuthenticatedCadastrosTextosModeloRoute: typeof AuthenticatedCadastrosTextosModeloRoute
   AuthenticatedCadastrosUnidadesRoute: typeof AuthenticatedCadastrosUnidadesRoute
   AuthenticatedCadastrosUsuariosRoute: typeof AuthenticatedCadastrosUsuariosRoute
   AuthenticatedFinanceiroConveniosRoute: typeof AuthenticatedFinanceiroConveniosRoute
@@ -666,6 +687,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosPacientesRoute: AuthenticatedCadastrosPacientesRoute,
   AuthenticatedCadastrosTabelasPrecoRoute:
     AuthenticatedCadastrosTabelasPrecoRoute,
+  AuthenticatedCadastrosTextosModeloRoute:
+    AuthenticatedCadastrosTextosModeloRoute,
   AuthenticatedCadastrosUnidadesRoute: AuthenticatedCadastrosUnidadesRoute,
   AuthenticatedCadastrosUsuariosRoute: AuthenticatedCadastrosUsuariosRoute,
   AuthenticatedFinanceiroConveniosRoute: AuthenticatedFinanceiroConveniosRoute,

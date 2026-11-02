@@ -1781,6 +1781,7 @@ export type Database = {
           name: string
           price_sector: string | null
           sector: string | null
+          is_text: boolean
         }
         Insert: {
           amb_code?: string | null
@@ -1792,6 +1793,7 @@ export type Database = {
           name: string
           price_sector?: string | null
           sector?: string | null
+          is_text?: boolean
         }
         Update: {
           amb_code?: string | null
@@ -1803,6 +1805,7 @@ export type Database = {
           name?: string
           price_sector?: string | null
           sector?: string | null
+          is_text?: boolean
         }
         Relationships: []
       }
@@ -1821,6 +1824,33 @@ export type Database = {
           code?: string
           name?: string
           unit?: string
+        }
+        Relationships: []
+      }
+      xlab_legacy_insurances: {
+        Row: {
+          ans_code: string | null
+          code: string
+          name: string
+          price_factor: number | null
+          price_table_code: string | null
+          tiss_table: string | null
+        }
+        Insert: {
+          ans_code?: string | null
+          code: string
+          name: string
+          price_factor?: number | null
+          price_table_code?: string | null
+          tiss_table?: string | null
+        }
+        Update: {
+          ans_code?: string | null
+          code?: string
+          name?: string
+          price_factor?: number | null
+          price_table_code?: string | null
+          tiss_table?: string | null
         }
         Relationships: []
       }

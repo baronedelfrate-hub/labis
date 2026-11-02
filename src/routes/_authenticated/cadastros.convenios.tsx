@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TissTabelaCombobox } from "@/components/TissTabelaCombobox";
+import { LegacyInsurancePicker } from "@/components/LegacyExamCatalog";
 
 type Insurance = { id: string; code: string; name: string; price_table_id: string; active: boolean; tiss_codigo_ans: string | null; tiss_tabela: string | null };
 
@@ -33,6 +34,11 @@ function InsurancePage() {
       ]}
       renderForm={({ value, setValue }) => (
         <>
+          {!value.id && (
+            <LegacyInsurancePicker
+              onPick={(i) => setValue({ ...value, code: i.code, name: i.name, tiss_codigo_ans: i.ans_code ?? "", tiss_tabela: i.tiss_table ?? "" })}
+            />
+          )}
           <div className="grid grid-cols-3 gap-3">
             <Field label="Código*"><Input required autoFocus value={value.code ?? ""} onChange={e => setValue({ ...value, code: e.target.value })} /></Field>
             <div className="col-span-2"><Field label="Nome*"><Input required value={value.name ?? ""} onChange={e => setValue({ ...value, name: e.target.value })} /></Field></div>

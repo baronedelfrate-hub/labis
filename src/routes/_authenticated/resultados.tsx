@@ -37,10 +37,14 @@ function ResultadosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status)")
+        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status))")
         .in("status", ["coletado"]);
       if (error) throw error;
-      return (data ?? []).filter((r: any) => r.sample?.status === "recebida");
+      // todas as amostras do exame precisam ter sido recebidas (exames com mais de uma amostra)
+      return (data ?? []).filter((r: any) => {
+        const statuses: string[] = r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status];
+        return statuses.length > 0 && statuses.every((st) => st === "recebida");
+      });
     },
   });
 

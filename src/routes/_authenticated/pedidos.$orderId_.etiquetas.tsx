@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Printer, AlertTriangle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Barcode } from "@/components/Barcode";
-import { buildLabels, sectorCodeFor, type LabelData } from "@/lib/sample-barcode";
+import { buildLabels, sectorCodeFor, sectorLine, type LabelData } from "@/lib/sample-barcode";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/etiquetas")({
   ssr: false,
@@ -64,18 +64,24 @@ function EtiquetasPage() {
       if (error) throw error;
       const { data: samples, error: se } = await supabase
         .from("samples")
-        .select("id, sample_number, sector, material, status")
+        .select("id, sample_number, sector, material, status, material_seq")
         .eq("order_id", orderId);
       if (se) throw se;
       const { data: items, error: ie } = await supabase
         .from("order_items")
-        .select("sample_id, exam:exams(code)")
-        .eq("order_id", orderId);
+        .select("sample_id, exam:exams(code, samples_count, labels_per_sample), links:order_item_samples(sample_id)")
+        .eq("order_id", orderId)
+        .order("created_at");
       if (ie) throw ie;
       const { data: sectors, error: be } = await supabase.from("barcode_sectors").select("sector, code");
       if (be) throw be;
       const codes = new Map<string, number>((sectors ?? []).map((s: any) => [s.sector as string, s.code as number]));
-      return { order: order as any, samples: (samples ?? []) as any[], items: (items ?? []) as any[], codes };
+      // um exame pode precisar de mais de uma amostra: usa todas as vinculadas (ou a principal, em pedidos antigos)
+      const itemsWithSamples = ((items ?? []) as any[]).map((i) => ({
+        exam: i.exam,
+        sample_ids: (i.links?.length ? i.links.map((l: any) => l.sample_id) : i.sample_id ? [i.sample_id] : []) as string[],
+      }));
+      return { order: order as any, samples: (samples ?? []) as any[], items: itemsWithSamples, codes };
     },
   });
 
@@ -173,10 +179,7 @@ function EtiquetasPage() {
             <Barcode value={l.barcode} className="l-bars" />
             <div className="l-digits">{l.barcode}</div>
             <div className="l-exams">{l.lines.map((ln, k) => <div key={k}>{ln}</div>)}</div>
-            <div className="l-sector">
-              * {l.sector ?? "SEM SETOR"} · {l.material ?? ""} · A{l.sampleNumber}
-              {l.parts > 1 ? ` · etiq. ${l.part}/${l.parts}` : ""}
-            </div>
+            <div className="l-sector">{sectorLine(l)}</div>
           </div>
         ))}
       </div>

@@ -75,7 +75,7 @@ function OrderDetail() {
   });
   const [portalCreds, setPortalCreds] = useState<{ public_code: string; pin: string } | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error: loadError, refetch: reload } = useQuery({
     queryKey: ["order", orderId],
     queryFn: async () => {
       const { data: order, error } = await supabase
@@ -112,6 +112,21 @@ function OrderDetail() {
     },
   });
 
+  if (loadError) {
+    return (
+      <div className="p-6">
+        <div role="alert" className="max-w-xl rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <div className="font-medium">Não foi possível carregar o pedido.</div>
+          <div className="mt-1 break-words text-xs">{String((loadError as Error)?.message ?? "Erro desconhecido")}</div>
+          <div className="mt-1 text-xs">Se o erro continuar, envie este texto ao suporte.</div>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => reload()}>Tentar de novo</Button>
+            <Button size="sm" variant="ghost" asChild><Link to="/pedidos">Voltar aos pedidos</Link></Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (isLoading || !data) return <div className="p-6 text-muted-foreground">Carregando...</div>;
   const o = data.order as any;
   const patient = o.patient as { name: string; code: string; cpf: string | null } | null;

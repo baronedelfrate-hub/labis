@@ -55,7 +55,7 @@ function ResultadosPage() {
   const { item: itemId, pedido: orderId } = Route.useSearch();
   const scoped = !!(itemId || orderId);
 
-  const { data: queue = [] } = useQuery({
+  const { data: queue = [], error: queueError, refetch: refetchQueue, isLoading: queueLoading } = useQuery({
     queryKey: ["pending-results"],
     enabled: canEnterResults && !scoped,
     queryFn: async () => {
@@ -75,7 +75,7 @@ function ResultadosPage() {
   });
 
   // Modo "um exame / um pedido": traz os exames ainda sem resultado, mesmo sem amostra recebida
-  const { data: scopedRows = [], isLoading: scopedLoading } = useQuery({
+  const { data: scopedRows = [], isLoading: scopedLoading, error: scopedError, refetch: refetchScoped } = useQuery({
     queryKey: ["result-scope", itemId ?? null, orderId ?? null],
     enabled: canEnterResults && scoped,
     queryFn: async () => {
@@ -195,8 +195,19 @@ function ResultadosPage() {
           <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
           <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Buscar paciente, nº do pedido ou exame" className="pl-9" aria-label="Buscar" />
         </div>
-        {scoped && scopedLoading && <div className="text-muted-foreground text-sm">Carregando...</div>}
-        {filtered.length === 0 && !(scoped && scopedLoading) && (
+        {(scoped ? scopedError : queueError) && (
+          <div role="alert" className="mb-3 flex flex-wrap items-start gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Não foi possível carregar os exames.</div>
+              <div className="break-words text-xs">{String(((scoped ? scopedError : queueError) as Error)?.message ?? "Erro desconhecido")}</div>
+              <div className="mt-1 text-xs">Se o erro continuar, envie este texto ao suporte.</div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => (scoped ? refetchScoped() : refetchQueue())}>Tentar de novo</Button>
+          </div>
+        )}
+        {(scoped ? scopedLoading : queueLoading && canEnterResults) && <div className="text-muted-foreground text-sm">Carregando...</div>}
+        {filtered.length === 0 && !(scoped ? scopedLoading : queueLoading) && !(scoped ? scopedError : queueError) && (
           <div className="text-muted-foreground text-sm">
             {text.trim()
               ? "Nenhum exame encontrado para essa busca."

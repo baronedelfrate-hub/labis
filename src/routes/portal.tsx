@@ -44,6 +44,11 @@ function PortalLoginPage() {
         setError("Este acesso expirou. Solicite um novo ao laboratório.");
         return;
       }
+      if (res.status >= 500) {
+        // Erro do servidor (ex.: configuração do portal), não é senha errada.
+        setError("O portal está indisponível no momento. Avise o laboratório.");
+        return;
+      }
       if (!res.ok) {
         setError("Código ou senha incorretos.");
         return;

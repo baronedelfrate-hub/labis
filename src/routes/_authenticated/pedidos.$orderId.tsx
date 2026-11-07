@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2 } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2, ClipboardEdit } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { createPortalAccess, getPortalAccessInfo } from "@/lib/portal.functions";
 import { cn } from "@/lib/utils";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
+import { useMyRoles } from "@/hooks/useMyRoles";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
@@ -56,6 +57,8 @@ function OrderDetail() {
   const [payOpen, setPayOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [deliverOpen, setDeliverOpen] = useState(false);
+  const navigate = useNavigate();
+  const { canEnterResults } = useMyRoles();
   const qcOrder = useQueryClient();
   const undoDelivery = useMutation({
     mutationFn: async () => {
@@ -139,6 +142,14 @@ function OrderDetail() {
               <Button variant="secondary" onClick={() => setPayOpen(true)} disabled={balance <= 0}>
                 <DollarSign className="size-4 mr-1" />
                 Registrar pagamento
+              </Button>
+            )}
+            {canEnterResults && (data.items as any[]).some((i) => i.status === "pendente" || i.status === "coletado") && (
+              <Button variant="secondary" asChild>
+                <Link to="/resultados" search={{ pedido: o.id }}>
+                  <ClipboardEdit className="size-4 mr-1" />
+                  Lançar resultados
+                </Link>
               </Button>
             )}
             {isFinalized && !o.delivered_at && (
@@ -228,6 +239,7 @@ function OrderDetail() {
                 <TableHead>Status</TableHead>
                 <TableHead>Amostra</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
+                <TableHead className="w-36" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,11 +249,15 @@ function OrderDetail() {
                 const result = resultByItem.get(i.id);
                 const hasDetail = !!result;
                 const isOpen = !!expanded[i.id];
+                const canEnter = canEnterResults && (i.status === "pendente" || i.status === "coletado");
                 return (
                   <Fragment key={i.id}>
                     <TableRow
-                      className={hasDetail ? "cursor-pointer" : ""}
-                      onClick={() => hasDetail && setExpanded((s) => ({ ...s, [i.id]: !s[i.id] }))}
+                      className={hasDetail || canEnter ? "cursor-pointer hover:bg-muted/50" : ""}
+                      onClick={() => {
+                        if (hasDetail) setExpanded((s) => ({ ...s, [i.id]: !s[i.id] }));
+                        else if (canEnter) navigate({ to: "/resultados", search: { item: i.id } });
+                      }}
                     >
                       <TableCell>
                         {hasDetail ? (
@@ -263,10 +279,17 @@ function OrderDetail() {
                         {sample ? `#${sample.sample_number} · ${sample.material}` : "—"}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">R$ {Number(i.price).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        {canEnter && (
+                          <Button size="sm" variant="outline" asChild onClick={(e) => e.stopPropagation()}>
+                            <Link to="/resultados" search={{ item: i.id }}>Lançar resultado</Link>
+                          </Button>
+                        )}
+                      </TableCell>
                     </TableRow>
                     {hasDetail && isOpen && (
                       <TableRow>
-                        <TableCell colSpan={6} className="bg-muted/30">
+                        <TableCell colSpan={7} className="bg-muted/30">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm py-2">
                             <div>
                               <div className="text-xs text-muted-foreground">Valor</div>

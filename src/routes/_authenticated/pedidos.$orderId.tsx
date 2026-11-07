@@ -5,7 +5,7 @@ import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -54,6 +54,21 @@ function OrderDetail() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [payOpen, setPayOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
+  const [deliverOpen, setDeliverOpen] = useState(false);
+  const qcOrder = useQueryClient();
+  const undoDelivery = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("orders").update({ delivered_at: null, delivered_by: null, delivered_to: null }).eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Entrega desfeita");
+      qcOrder.invalidateQueries({ queryKey: ["order", orderId] });
+      qcOrder.invalidateQueries({ queryKey: ["orders"] });
+      qcOrder.invalidateQueries({ queryKey: ["dashboard-prontos"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Erro ao desfazer a entrega"),
+  });
   const [portalCreds, setPortalCreds] = useState<{ public_code: string; pin: string } | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -64,7 +79,7 @@ function OrderDetail() {
         .select(
           `
         id, order_number, order_date, collection_date, status, is_urgent, total_value, notes, company_id, cid10_code,
-        payment_status, billing_batch_id, insurance_plan_id,
+        payment_status, billing_batch_id, insurance_plan_id, delivered_at, delivered_to,
         patient:patients(id,code,name,cpf,birth_date),
         doctor:doctors(id,name,crm,crm_uf),
         insurance:insurance_plans(id,name,is_particular),
@@ -125,6 +140,18 @@ function OrderDetail() {
                 Registrar pagamento
               </Button>
             )}
+            {isFinalized && !o.delivered_at && (
+              <Button variant="secondary" onClick={() => setDeliverOpen(true)}>
+                <PackageCheck className="size-4 mr-1" />
+                Marcar como entregue
+              </Button>
+            )}
+            {isFinalized && o.delivered_at && (
+              <Button variant="ghost" onClick={() => { if (confirm("Desfazer o registro de entrega deste pedido?")) undoDelivery.mutate(); }} disabled={undoDelivery.isPending}>
+                <Undo2 className="size-4 mr-1" />
+                Desfazer entrega
+              </Button>
+            )}
             {isFinalized && (
               <Button variant="outline" onClick={() => setPortalOpen(true)}>
                 <KeyRound className="size-4 mr-1" />
@@ -179,6 +206,11 @@ function OrderDetail() {
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline">{o.status}</Badge>
+          {o.delivered_at && (
+            <Badge className="bg-emerald-100 text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-200" variant="outline">
+              Entregue em {new Date(o.delivered_at).toLocaleDateString("pt-BR")}{o.delivered_to ? ` · retirado por ${o.delivered_to}` : ""}
+            </Badge>
+          )}
           {o.is_urgent && <Badge className="bg-warning text-warning-foreground">Urgente</Badge>}
           <Badge className={cn("font-medium", paymentStatusStyles[o.payment_status] ?? "")} variant="outline">
             Pagamento: {o.payment_status}
@@ -337,6 +369,12 @@ function OrderDetail() {
         )}
       </PageBody>
 
+      <DeliveryDialog
+        open={deliverOpen}
+        onOpenChange={setDeliverOpen}
+        orderId={o.id}
+        pendingBalance={isParticular ? balance : 0}
+      />
       <PaymentDialog
         open={payOpen}
         onOpenChange={setPayOpen}
@@ -636,5 +674,58 @@ function Info({ title, main, sub }: { title: string; main?: string; sub?: string
       <div className="mt-1 font-medium">{main}</div>
       {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
     </div>
+  );
+}
+
+function DeliveryDialog({ open, onOpenChange, orderId, pendingBalance }: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  orderId: string;
+  pendingBalance: number;
+}) {
+  const qc = useQueryClient();
+  const [who, setWho] = useState("");
+  const mut = useMutation({
+    mutationFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase.from("orders").update({
+        delivered_at: new Date().toISOString(),
+        delivered_by: u.user?.id ?? null,
+        delivered_to: who.trim() || null,
+      }).eq("id", orderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Entrega registrada");
+      setWho("");
+      qc.invalidateQueries({ queryKey: ["order", orderId] });
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-prontos"] });
+      onOpenChange(false);
+    },
+    onError: (e: any) => toast.error(e.message ?? "Erro ao registrar a entrega"),
+  });
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Marcar como entregue</DialogTitle>
+          <DialogDescription>Registra que o laudo foi entregue ao paciente. O pedido sai da lista de prontos para entrega.</DialogDescription>
+        </DialogHeader>
+        {pendingBalance > 0 && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Este pedido ainda tem saldo a pagar de <b className="tabular-nums">R$ {pendingBalance.toFixed(2)}</b>.
+          </div>
+        )}
+        <div className="grid gap-1.5">
+          <Label>Retirado por (opcional)</Label>
+          <Input value={who} onChange={(e) => setWho(e.target.value)} placeholder="Nome de quem retirou" />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>Confirmar entrega</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

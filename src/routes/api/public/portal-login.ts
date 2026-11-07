@@ -29,8 +29,10 @@ export const Route = createFileRoute("/api/public/portal-login")({
           .rpc("portal_verify_login", { _code: code, _pin: pin })
           .single();
         if (error) {
-          console.error("[portal-login] rpc:", error.message);
-          return Response.json({ error: "server_error", stage: "verificacao" }, { status: 500 });
+          console.error("[portal-login] rpc:", error.code, error.message);
+          // Só um código curto para diagnóstico (nunca a mensagem interna): chave recusada ou código do Postgres/PostgREST.
+          const detail = /api key|jwt/i.test(error.message ?? "") ? "chave-recusada" : (error.code || "sem-codigo");
+          return Response.json({ error: "server_error", stage: `verificacao/${detail}` }, { status: 500 });
         }
         const row = data as { status: string; order_id: string | null; locked_until: string | null };
         if (row.status === "locked") {

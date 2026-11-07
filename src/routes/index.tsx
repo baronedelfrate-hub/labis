@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   FlaskConical, ClipboardList, TestTube2, Barcode, Calculator, ShieldCheck, FileText, Wallet,
-  Smartphone, Building2, Users, Check, ArrowRight, Share2, Library, Printer,
+  Smartphone, Building2, Users, Check, ArrowRight, Share2, Library, Printer, Truck, Layers, CircleHelp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,14 +25,17 @@ const features: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: ClipboardList, title: "Pedidos e cadastros", text: "Pacientes, médicos, convênios, unidades e exames. Pedido com urgência, convênio e tabela de preço aplicada automaticamente." },
   { icon: Barcode, title: "Código de barras e etiquetas", text: "Etiqueta por amostra com código padrão de laboratório, vários tubos por exame e impressão no tamanho da sua impressora." },
   { icon: TestTube2, title: "Coleta e recebimento", text: "Leitura do código na bancada confirma a coleta e o recebimento. Amostras rejeitadas pedem nova coleta com motivo registrado." },
-  { icon: Calculator, title: "Resultados inteligentes", text: "Valores de referência por sexo e idade, destaque de fora da faixa, alerta de pânico com confirmação e campos calculados por fórmula." },
+  { icon: Calculator, title: "Resultados inteligentes", text: "Valores de referência por sexo e idade, destaque de fora da faixa, alerta de pânico com confirmação e campos calculados por fórmula. Lance pela fila ou direto do pedido do paciente." },
   { icon: FileText, title: "Textos-modelo e histórico", text: "Exames descritivos com textos-modelo prontos e histórico do paciente para comparar resultados anteriores." },
   { icon: ShieldCheck, title: "Liberação e laudo", text: "Conferência antes da liberação, laudo pronto para imprimir e comprovante de entrada para o paciente." },
-  { icon: Share2, title: "Portal do paciente", text: "O paciente consulta e baixa o laudo com segurança, sem ligar para o laboratório." },
+  { icon: Share2, title: "Portal do paciente", text: "O paciente consulta e imprime o laudo com código e senha, em uma tela com o nome e a logo do seu laboratório." },
   { icon: Wallet, title: "Financeiro e convênios", text: "Valores a receber, lotes de faturamento por convênio e mês de referência e registro de pagamentos." },
   { icon: Library, title: "Biblioteca de referência", text: "Catálogo de exames, tabelas de preço AMB e CID-10 prontos para consulta. Menos digitação, menos erro." },
-  { icon: Building2, title: "Multiempresa e unidades", text: "Cada laboratório tem seus dados isolados. Ao criar a conta, você já começa com textos-modelo e configuração inicial." },
+  { icon: Building2, title: "Multiempresa e unidades", text: "Cada laboratório tem seus dados isolados. Ao criar a conta, você já começa com uma base pronta: exames de rotina, perfis, preços e textos-modelo." },
   { icon: Users, title: "Equipe e permissões", text: "Convide a equipe e defina o perfil de cada pessoa: administrador, coleta, bancada, liberação ou financeiro." },
+  { icon: Truck, title: "Laboratórios de apoio", text: "Envie exames terceirizados em remessas com romaneio para imprimir, acompanhe o retorno e veja os atrasos no painel e no menu." },
+  { icon: Layers, title: "Perfis e check-ups", text: "Grupos de exames prontos, como perfil lipídico, hepático, pré-natal e check-up geral, para lançar vários exames de uma vez." },
+  { icon: CircleHelp, title: "Ajuda em cada tela", text: "Um botão de ajuda mostra o passo a passo da tela em que você está, para a equipe aprender usando." },
   { icon: Smartphone, title: "App no celular", text: "Instale na tela inicial como aplicativo. Menu adaptado para o celular, funciona na recepção, na coleta e em casa." },
 ];
 
@@ -43,20 +46,41 @@ const shots = [
   { src: "/landing/coleta-d.webp", title: "Coleta com leitor", text: "Passe o código de barras e a amostra é confirmada." },
   { src: "/landing/etiquetas-d.webp", title: "Etiquetas", text: "Etiqueta com código de barras, exames e setor." },
   { src: "/landing/financeiro-d.webp", title: "Financeiro", text: "Particular, convênios e recebido no mês." },
+  { src: "/landing/apoio-d.webp", title: "Envio ao apoio", text: "Exames terceirizados, previsão de retorno e atrasos em destaque." },
 ];
 
 const plans = [
   {
     name: "Essencial", price: "R$ 149", tag: "Para começar",
-    items: ["1 unidade", "Até 3 usuários", "Até 300 pedidos por mês", "Coleta, resultados e laudos", "Código de barras e etiquetas", "App no celular"],
+    items: [
+      "Pedidos, coleta e resultados",
+      "Código de barras e etiquetas",
+      "Pânico, referências e campos calculados",
+      "Laudo para imprimir e comprovante",
+      "Base inicial pronta: exames, perfis e preços",
+      "App no celular e ajuda em cada tela",
+    ],
   },
   {
     name: "Profissional", price: "R$ 349", tag: "Mais escolhido", highlight: true,
-    items: ["Até 3 unidades", "Até 10 usuários", "Até 1.500 pedidos por mês", "Tudo do Essencial", "Convênios e lotes de faturamento", "Portal do paciente", "Biblioteca de exames e tabelas AMB"],
+    items: [
+      "Tudo do Essencial",
+      "Portal do paciente com a marca do laboratório",
+      "Convênios, tabelas de preço e lotes de faturamento",
+      "Laboratórios de apoio: remessa, romaneio e alertas",
+      "Biblioteca do XLAB7: catálogo, tabelas AMB e CID-10",
+      "Várias unidades e equipe com perfis de acesso",
+    ],
   },
   {
     name: "Rede", price: "Sob consulta", tag: "Para laboratórios maiores",
-    items: ["Unidades e usuários ilimitados", "Pedidos sem limite", "Tudo do Profissional", "Implantação e migração de dados", "Suporte prioritário"],
+    items: [
+      "Tudo do Profissional",
+      "Implantação e migração de dados",
+      "Treinamento da equipe",
+      "Suporte prioritário",
+      "Ajustes sob medida",
+    ],
   },
 ];
 
@@ -106,7 +130,7 @@ function Landing() {
                 <Button asChild size="lg"><Link to={enter}>{enterLabel}<ArrowRight className="ml-1 size-4" /></Link></Button>
                 <Button asChild size="lg" variant="outline"><a href="#planos">Ver planos</a></Button>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">Novo por aqui? Na tela de entrada, escolha “Criar conta”.</p>
+              <p className="mt-3 text-xs text-muted-foreground">Novo por aqui? <Link to="/auth" search={{ aba: "criar" }} className="underline">Crie a conta e teste</Link> com a base inicial já pronta.</p>
             </div>
             <Shot src="/landing/dashboard-d.webp" alt="Painel do dia do LabIS" priority />
           </div>
@@ -166,7 +190,7 @@ function Landing() {
         <section id="planos" className="scroll-mt-16 border-t bg-muted/40">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <h2 className="text-2xl font-semibold sm:text-3xl">Planos</h2>
-            <p className="mt-2 max-w-2xl text-muted-foreground">Valores de referência, por mês. Fale com a gente para ajustar ao tamanho do seu laboratório.</p>
+            <p className="mt-2 max-w-2xl text-muted-foreground">Valores de referência, por mês. Os planos se diferenciam pelos recursos. Crie a conta, teste com a base inicial pronta e combine o plano depois do teste.</p>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               {plans.map(p => (
                 <div key={p.name} className={`flex flex-col rounded-xl border bg-card p-6 ${p.highlight ? "border-primary ring-2 ring-primary/30" : ""}`}>
@@ -176,7 +200,7 @@ function Landing() {
                   <ul className="mt-5 flex-1 space-y-2 text-sm">
                     {p.items.map(i => <li key={i} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-success" />{i}</li>)}
                   </ul>
-                  <Button asChild className="mt-6" variant={p.highlight ? "default" : "outline"}><Link to="/auth">Começar agora</Link></Button>
+                  <Button asChild className="mt-6" variant={p.highlight ? "default" : "outline"}><Link to="/auth" search={{ aba: "criar" }}>Criar conta e testar</Link></Button>
                 </div>
               ))}
             </div>
@@ -187,8 +211,9 @@ function Landing() {
           <Printer className="mx-auto size-8 text-primary" />
           <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">Pronto para organizar o seu laboratório?</h2>
           <p className="mx-auto mt-2 max-w-xl text-muted-foreground">Crie a conta, convide a equipe e comece a cadastrar pedidos hoje.</p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Button asChild size="lg"><Link to={enter}>{enterLabel}</Link></Button>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            {!hasSession && <Button asChild size="lg"><Link to="/auth" search={{ aba: "criar" }}>Criar conta e testar</Link></Button>}
+            <Button asChild size="lg" variant={hasSession ? "default" : "outline"}><Link to={enter}>{enterLabel}</Link></Button>
           </div>
         </section>
       </main>

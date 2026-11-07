@@ -186,6 +186,7 @@ export type Database = {
           next_order_number: number
           next_patient_code: number
           plan: string
+          portal_slug: string | null
           updated_at: string
         }
         Insert: {
@@ -197,6 +198,7 @@ export type Database = {
           next_order_number?: number
           next_patient_code?: number
           plan?: string
+          portal_slug?: string | null
           updated_at?: string
         }
         Update: {
@@ -208,6 +210,7 @@ export type Database = {
           next_order_number?: number
           next_patient_code?: number
           plan?: string
+          portal_slug?: string | null
           updated_at?: string
         }
         Relationships: []

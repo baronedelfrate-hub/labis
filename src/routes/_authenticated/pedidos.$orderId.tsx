@@ -22,6 +22,7 @@ import { useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createPortalAccess, getPortalAccessInfo } from "@/lib/portal.functions";
 import { cn } from "@/lib/utils";
+import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
@@ -399,7 +400,9 @@ function OrderDetail() {
   );
 }
 
-function printAccessVoucher(opts: { code: string; orderNumber: number; patientName?: string; portalUrl: string }) {
+const esc = (v: string) => v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+
+function printAccessVoucher(opts: { code: string; orderNumber: number; patientName?: string; portalUrl: string; labName?: string }) {
   const win = window.open("", "_blank", "width=420,height=560");
   if (!win) return;
   win.document.write(`
@@ -408,6 +411,7 @@ function printAccessVoucher(opts: { code: string; orderNumber: number; patientNa
         <title>Acesso ao portal — Pedido #${opts.orderNumber}</title>
         <style>
           body { font-family: Inter, system-ui, sans-serif; padding: 24px; color: #111; }
+          .lab { font-size: 13px; font-weight: 600; margin: 0 0 10px; }
           h1 { font-size: 14px; margin: 0 0 4px; }
           .sub { font-size: 11px; color: #666; margin-bottom: 20px; }
           .code { font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: 0.15em;
@@ -417,9 +421,10 @@ function printAccessVoucher(opts: { code: string; orderNumber: number; patientNa
         </style>
       </head>
       <body>
+        ${opts.labName ? `<div class="lab">${esc(opts.labName)}</div>` : ""}
         <h1>Acesso ao laudo online</h1>
-        <div class="sub">Pedido #${opts.orderNumber}${opts.patientName ? " — " + opts.patientName : ""}</div>
-        <div class="url">${opts.portalUrl}</div>
+        <div class="sub">Pedido #${opts.orderNumber}${opts.patientName ? " — " + esc(opts.patientName) : ""}</div>
+        <div class="url">${esc(opts.portalUrl)}</div>
         <div class="code">${opts.code}</div>
         <div class="note">
           Acesse o endereço acima e informe este código junto com a senha numérica
@@ -467,7 +472,9 @@ function PortalAccessDialog({
     onError: (e: any) => toast.error(e?.message ?? "Erro ao gerar acesso"),
   });
 
-  const portalUrl = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
+  const { data: branding } = useCompanyBranding();
+  const portalBase = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
+  const portalUrl = branding?.slug ? `${portalBase}?lab=${branding.slug}` : portalBase;
   const hasExisting = !!existing?.public_code;
 
   return (
@@ -527,6 +534,7 @@ function PortalAccessDialog({
                   orderNumber,
                   patientName,
                   portalUrl,
+                  labName: branding?.name,
                 })
               }
             >

@@ -35,6 +35,7 @@ import { Route as AuthenticatedFinanceiroConveniosRouteImport } from './routes/_
 import { Route as AuthenticatedPedidosIndexRouteImport } from './routes/_authenticated/pedidos.index'
 import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authenticated/pedidos.$orderId'
 import { Route as AuthenticatedPedidosNovoRouteImport } from './routes/_authenticated/pedidos.novo'
+import { Route as ApiPublicPortalBrandRouteImport } from './routes/api/public/portal-brand'
 import { Route as ApiPublicPortalLaudoRouteImport } from './routes/api/public/portal-laudo'
 import { Route as ApiPublicPortalLoginRouteImport } from './routes/api/public/portal-login'
 import { Route as AuthenticatedApoioRomaneioShipmentIdRouteImport } from './routes/_authenticated/apoio_.romaneio.$shipmentId'
@@ -189,6 +190,11 @@ const AuthenticatedPedidosNovoRoute =
     path: '/pedidos/novo',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPortalBrandRoute = ApiPublicPortalBrandRouteImport.update({
+  id: '/api/public/portal-brand',
+  path: '/api/public/portal-brand',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPortalLaudoRoute = ApiPublicPortalLaudoRouteImport.update({
   id: '/api/public/portal-laudo',
   path: '/api/public/portal-laudo',
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/pedidos/novo': typeof AuthenticatedPedidosNovoRoute
+  '/api/public/portal-brand': typeof ApiPublicPortalBrandRoute
   '/api/public/portal-laudo': typeof ApiPublicPortalLaudoRoute
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/financeiro/': typeof AuthenticatedFinanceiroIndexRoute
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
   '/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/pedidos/novo': typeof AuthenticatedPedidosNovoRoute
+  '/api/public/portal-brand': typeof ApiPublicPortalBrandRoute
   '/api/public/portal-laudo': typeof ApiPublicPortalLaudoRoute
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/financeiro': typeof AuthenticatedFinanceiroIndexRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated/financeiro/convenios': typeof AuthenticatedFinanceiroConveniosRoute
   '/_authenticated/pedidos/$orderId': typeof AuthenticatedPedidosOrderIdRoute
   '/_authenticated/pedidos/novo': typeof AuthenticatedPedidosNovoRoute
+  '/api/public/portal-brand': typeof ApiPublicPortalBrandRoute
   '/api/public/portal-laudo': typeof ApiPublicPortalLaudoRoute
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/_authenticated/financeiro/': typeof AuthenticatedFinanceiroIndexRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/financeiro/convenios'
     | '/pedidos/$orderId'
     | '/pedidos/novo'
+    | '/api/public/portal-brand'
     | '/api/public/portal-laudo'
     | '/api/public/portal-login'
     | '/financeiro/'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/financeiro/convenios'
     | '/pedidos/$orderId'
     | '/pedidos/novo'
+    | '/api/public/portal-brand'
     | '/api/public/portal-laudo'
     | '/api/public/portal-login'
     | '/financeiro'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro/convenios'
     | '/_authenticated/pedidos/$orderId'
     | '/_authenticated/pedidos/novo'
+    | '/api/public/portal-brand'
     | '/api/public/portal-laudo'
     | '/api/public/portal-login'
     | '/_authenticated/financeiro/'
@@ -458,6 +470,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PortalRoute: typeof PortalRoute
   PortalLaudoRoute: typeof PortalLaudoRoute
+  ApiPublicPortalBrandRoute: typeof ApiPublicPortalBrandRoute
   ApiPublicPortalLaudoRoute: typeof ApiPublicPortalLaudoRoute
   ApiPublicPortalLoginRoute: typeof ApiPublicPortalLoginRoute
 }
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPedidosNovoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/portal-brand': {
+      id: '/api/public/portal-brand'
+      path: '/api/public/portal-brand'
+      fullPath: '/api/public/portal-brand'
+      preLoaderRoute: typeof ApiPublicPortalBrandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portal-laudo': {
       id: '/api/public/portal-laudo'
       path: '/api/public/portal-laudo'
@@ -783,6 +803,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PortalRoute: PortalRoute,
   PortalLaudoRoute: PortalLaudoRoute,
+  ApiPublicPortalBrandRoute: ApiPublicPortalBrandRoute,
   ApiPublicPortalLaudoRoute: ApiPublicPortalLaudoRoute,
   ApiPublicPortalLoginRoute: ApiPublicPortalLoginRoute,
 }

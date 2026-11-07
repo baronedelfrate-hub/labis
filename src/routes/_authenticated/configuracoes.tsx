@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCompanyId } from "@/hooks/useCompanyId";
 import { toast } from "sonner";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Copy, ExternalLink } from "lucide-react";
 import { BarcodeSectorsCard } from "@/components/BarcodeSectorsCard";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
@@ -169,9 +169,78 @@ function SettingsPage() {
             <Field label="Rodapé (texto adicional)"><Textarea rows={2} value={form.footer_note} onChange={e => setForm({ ...form, footer_note: e.target.value })} /></Field>
           </div>
 
+          <PortalAddressCard />
+
           <BarcodeSectorsCard />
         </div>
       </PageBody>
     </>
+  );
+}
+
+const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+// Endereço do portal do paciente deste laboratório (/portal?lab=...). A tela de login do portal usa o endereço
+// para mostrar o nome e a logo do laboratório. O link impresso e o do diálogo "Acesso ao portal" já saem com ele.
+function PortalAddressCard() {
+  const companyId = useCompanyId();
+  const qc = useQueryClient();
+  const [slug, setSlug] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ["company-slug", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("companies").select("portal_slug").eq("id", companyId!).maybeSingle();
+      if (error) throw error;
+      return (data as { portal_slug: string | null } | null)?.portal_slug ?? "";
+    },
+  });
+  useEffect(() => { if (data !== undefined) setSlug(data); }, [data]);
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const clean = slug.trim().toLowerCase();
+  const valid = clean.length >= 3 && clean.length <= 40 && SLUG_RE.test(clean);
+  const url = `${origin}/portal?lab=${clean}`;
+
+  async function save() {
+    if (!companyId || !valid) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("companies").update({ portal_slug: clean }).eq("id", companyId);
+      if (error) throw error;
+      toast.success("Endereço do portal salvo");
+      setSlug(clean);
+      qc.invalidateQueries({ queryKey: ["company-slug"] });
+      qc.invalidateQueries({ queryKey: ["company-branding"] });
+    } catch (err: any) {
+      const msg = String(err?.message ?? "");
+      toast.error(msg.includes("duplicate") || msg.includes("unique") ? "Esse endereço já está em uso. Escolha outro." : msg || "Falha ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-md border bg-card p-4 space-y-3">
+      <div className="text-sm font-medium">Endereço do portal do paciente</div>
+      <p className="text-xs text-muted-foreground">
+        O paciente que abrir este endereço vê o nome e a logo do seu laboratório na tela de acesso ao laudo.
+        O link impresso na folha de acesso já usa este endereço.
+      </p>
+      <Field label="Endereço">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground font-mono">{origin}/portal?lab=</span>
+          <Input className="max-w-xs font-mono" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))} placeholder="meu-laboratorio" aria-label="Endereço do portal" />
+        </div>
+        {slug && !valid && <span className="text-xs text-destructive">Use de 3 a 40 letras minúsculas, números e hífen (sem hífen no começo ou no fim).</span>}
+      </Field>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={save} disabled={!valid || saving || clean === (data ?? "")}>{saving && <Loader2 className="size-4 mr-1 animate-spin" />}Salvar endereço</Button>
+        <Button type="button" variant="outline" disabled={!valid} onClick={() => { navigator.clipboard?.writeText(url); toast.success("Link copiado"); }}><Copy className="size-4 mr-1" />Copiar link</Button>
+        <Button type="button" variant="outline" disabled={!valid} asChild><a href={url} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-1" />Abrir</a></Button>
+      </div>
+    </div>
   );
 }

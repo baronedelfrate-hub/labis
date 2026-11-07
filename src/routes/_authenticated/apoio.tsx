@@ -9,11 +9,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Send, Undo2 } from "lucide-react";
+import { FileText, Send, Undo2, ClipboardEdit } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSupportReturns, type SupportReturn } from "@/hooks/useSupportReturns";
+import { delayLabel, type DelayState } from "@/lib/support-delay";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+type Tab = "enviar" | "retorno" | "enviadas";
 
 export const Route = createFileRoute("/_authenticated/apoio")({
   head: () => ({ meta: [{ title: "Envio ao apoio — LIS" }] }),
+  validateSearch: (s: Record<string, unknown>): { aba?: Tab } => ({
+    aba: s.aba === "retorno" || s.aba === "enviadas" ? s.aba : undefined,
+  }),
   component: SupportPage,
 });
 
@@ -29,16 +38,28 @@ const hasShipment = (x: unknown) => (Array.isArray(x) ? x.length > 0 : !!x);
 const fmt = (d: string) => new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
 function SupportPage() {
+  const navigate = useNavigate();
+  const { aba } = Route.useSearch();
+  const tab: Tab = aba ?? "enviar";
+  const { data: returns = [] } = useSupportReturns();
+  const late = returns.filter((r) => r.delay.state === "atrasado").length;
   return (
     <>
-      <PageHeader title="Envio ao apoio" description="Exames terceirizados: monte a remessa de cada laboratório de apoio e acompanhe o que foi enviado" />
+      <PageHeader title="Envio ao apoio" description="Exames terceirizados: monte a remessa de cada laboratório de apoio e acompanhe o retorno" />
       <PageBody>
-        <Tabs defaultValue="enviar">
+        <Tabs value={tab} onValueChange={(v) => navigate({ to: "/apoio", search: { aba: v === "enviar" ? undefined : (v as Tab) }, replace: true })}>
           <TabsList>
             <TabsTrigger value="enviar">A enviar</TabsTrigger>
+            <TabsTrigger value="retorno" className="gap-1.5">
+              Aguardando retorno
+              {returns.length > 0 && (
+                <span className={cn("rounded-full px-1.5 text-[11px] font-medium", late > 0 ? "bg-red-600 text-white" : "bg-muted text-muted-foreground")}>{returns.length}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="enviadas">Remessas enviadas</TabsTrigger>
           </TabsList>
           <TabsContent value="enviar" className="mt-4"><ToSend /></TabsContent>
+          <TabsContent value="retorno" className="mt-4"><AwaitingReturn /></TabsContent>
           <TabsContent value="enviadas" className="mt-4"><Sent /></TabsContent>
         </Tabs>
       </PageBody>
@@ -104,6 +125,7 @@ function ToSend() {
     onSuccess: (id) => {
       toast.success("Remessa criada e marcada como enviada");
       qc.invalidateQueries({ queryKey: ["support-pending"] });
+      qc.invalidateQueries({ queryKey: ["support-returns"] });
       qc.invalidateQueries({ queryKey: ["support-shipments"] });
       qc.invalidateQueries({ queryKey: ["pending-results"] });
       navigate({ to: "/apoio/romaneio/$shipmentId", params: { shipmentId: id } });
@@ -174,6 +196,91 @@ function ToSend() {
   );
 }
 
+const stateStyle: Record<DelayState, string> = {
+  atrasado: "bg-red-100 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-200",
+  vence_hoje: "bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200",
+  no_prazo: "bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200",
+  sem_prazo: "bg-muted text-muted-foreground",
+};
+const fmtDay = (d: Date | null) => (d ? d.toLocaleDateString("pt-BR") : "—");
+
+function AwaitingReturn() {
+  const { data: rows = [], isLoading } = useSupportReturns();
+  const [lab, setLab] = useState("__all__");
+  const [onlyLate, setOnlyLate] = useState(false);
+
+  const labs = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of rows) m.set(r.labId ?? r.labName, r.labName);
+    return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1], "pt-BR"));
+  }, [rows]);
+  const shown = rows.filter((r) => (lab === "__all__" || (r.labId ?? r.labName) === lab) && (!onlyLate || r.delay.state === "atrasado"));
+  const late = rows.filter((r) => r.delay.state === "atrasado").length;
+  const today = rows.filter((r) => r.delay.state === "vence_hoje").length;
+
+  if (isLoading) return <div className="text-muted-foreground">Carregando...</div>;
+  if (rows.length === 0) {
+    return <div className="rounded-md border bg-card p-6 text-sm text-muted-foreground">Nenhum exame de apoio aguardando retorno. Eles aparecem aqui depois que a remessa é marcada como enviada, até o resultado ser lançado.</div>;
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="text-sm" data-testid="return-summary">
+          <b>{rows.length}</b> aguardando
+          {late > 0 && <> · <b className="text-red-700">{late} atrasado{late > 1 ? "s" : ""}</b></>}
+          {today > 0 && <> · <b className="text-amber-700">{today} vence{today > 1 ? "m" : ""} hoje</b></>}
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm"><Checkbox checked={onlyLate} onCheckedChange={(v) => setOnlyLate(!!v)} />Só atrasados</label>
+          <Select value={lab} onValueChange={setLab}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Apoio" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todos os apoios</SelectItem>
+              {labs.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="rounded-md border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Situação</TableHead>
+              <TableHead>Apoio</TableHead>
+              <TableHead>Remessa</TableHead>
+              <TableHead>Pedido</TableHead>
+              <TableHead>Paciente</TableHead>
+              <TableHead>Exame</TableHead>
+              <TableHead>Enviado</TableHead>
+              <TableHead>Previsto</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shown.length === 0 && <TableRow><TableCell colSpan={9} className="py-6 text-center text-muted-foreground">Nenhum exame com esses filtros.</TableCell></TableRow>}
+            {shown.map((r: SupportReturn) => (
+              <TableRow key={r.id}>
+                <TableCell><Badge variant="outline" className={cn("whitespace-nowrap", stateStyle[r.delay.state])}>{delayLabel(r.delay)}</Badge></TableCell>
+                <TableCell>{r.labName}</TableCell>
+                <TableCell className="tabular-nums">#{r.shipmentNumber}</TableCell>
+                <TableCell className="tabular-nums">#{r.orderNumber}</TableCell>
+                <TableCell>{r.patientName} <span className="text-xs text-muted-foreground">({r.patientCode})</span></TableCell>
+                <TableCell><span className="font-mono tabular-nums mr-1">{r.examCode}</span>{r.examName}</TableCell>
+                <TableCell className="tabular-nums text-muted-foreground">{new Date(r.sentAt).toLocaleDateString("pt-BR")}</TableCell>
+                <TableCell className="tabular-nums">{fmtDay(r.delay.due)}</TableCell>
+                <TableCell className="text-right">
+                  <Button asChild size="sm" variant="outline"><Link to="/resultados" search={{ item: r.orderItemId }}><ClipboardEdit className="mr-1 size-4" />Lançar</Link></Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="text-xs text-muted-foreground">Previsão = data do envio + prazo do laboratório de apoio (ou o prazo do exame, se o apoio não tiver), em dias corridos. Ajuste o prazo em Cadastros &gt; Laboratórios de apoio.</p>
+    </div>
+  );
+}
+
 type Shipment = {
   id: string; number: number; sent_at: string;
   support_lab: { name: string } | null;
@@ -182,6 +289,9 @@ type Shipment = {
 
 function Sent() {
   const qc = useQueryClient();
+  const { data: returns = [] } = useSupportReturns();
+  const lateByShipment = new Map<string, number>();
+  for (const r of returns) if (r.delay.state === "atrasado") lateByShipment.set(r.shipmentId, (lateByShipment.get(r.shipmentId) ?? 0) + 1);
   const { data: shipments = [], isLoading } = useQuery({
     queryKey: ["support-shipments"],
     queryFn: async (): Promise<Shipment[]> => {
@@ -202,6 +312,7 @@ function Sent() {
       toast.success("Envio desfeito. Os exames voltaram para a fila de envio.");
       qc.invalidateQueries({ queryKey: ["support-shipments"] });
       qc.invalidateQueries({ queryKey: ["support-pending"] });
+      qc.invalidateQueries({ queryKey: ["support-returns"] });
       qc.invalidateQueries({ queryKey: ["pending-results"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -236,6 +347,7 @@ function Sent() {
                 <TableCell className="tabular-nums">{total}</TableCell>
                 <TableCell>
                   {returned >= total ? <Badge className="bg-emerald-100 text-emerald-900" variant="outline">Completo</Badge> : <Badge variant="outline">{returned} de {total} lançados</Badge>}
+                  {(lateByShipment.get(s.id) ?? 0) > 0 && <Badge variant="outline" className={cn("ml-1", stateStyle.atrasado)}>{lateByShipment.get(s.id)} atrasado{(lateByShipment.get(s.id) ?? 0) > 1 ? "s" : ""}</Badge>}
                 </TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button asChild size="sm" variant="outline"><Link to="/apoio/romaneio/$shipmentId" params={{ shipmentId: s.id }}><FileText className="mr-1 size-4" />Romaneio</Link></Button>

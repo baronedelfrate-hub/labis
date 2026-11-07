@@ -5,6 +5,7 @@ import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -43,7 +44,8 @@ function entryWarning(r: any): string | null {
   if (st.length === 0 || st.some((x) => !x)) return "Este exame ainda não tem amostra coletada. Confira antes de lançar.";
   if (st.some((x) => x === "rejeitada")) return "A amostra deste exame foi rejeitada. Confira antes de lançar.";
   if (st.every((x) => x === "recebida")) return null;
-  return "A amostra ainda não foi recebida na bancada. Confira antes de lançar.";
+  if (st.some((x) => x === "pendente")) return "A amostra ainda não foi coletada. Confira antes de lançar.";
+  return "A amostra foi coletada, mas ainda não foi recebida na bancada. Confira antes de lançar.";
 }
 
 function ResultadosPage() {
@@ -52,10 +54,11 @@ function ResultadosPage() {
   const companyId = useCompanyId();
   const [sector, setSector] = useState<string>("__all__");
   const [text, setText] = useState("");
+  const [includeAll, setIncludeAll] = useState(false);
   const { item: itemId, pedido: orderId } = Route.useSearch();
   const scoped = !!(itemId || orderId);
 
-  const { data: queue = [] } = useQuery({
+  const { data: queue = [], error: queueError, refetch: refetchQueue, isLoading: queueLoading } = useQuery({
     queryKey: ["pending-results"],
     enabled: canEnterResults && !scoped,
     queryFn: async () => {
@@ -75,7 +78,7 @@ function ResultadosPage() {
   });
 
   // Modo "um exame / um pedido": traz os exames ainda sem resultado, mesmo sem amostra recebida
-  const { data: scopedRows = [], isLoading: scopedLoading } = useQuery({
+  const { data: scopedRows = [], isLoading: scopedLoading, error: scopedError, refetch: refetchScoped } = useQuery({
     queryKey: ["result-scope", itemId ?? null, orderId ?? null],
     enabled: canEnterResults && scoped,
     queryFn: async () => {
@@ -87,7 +90,26 @@ function ResultadosPage() {
     },
   });
 
-  const data = (scoped ? scopedRows : queue) as any[];
+  // Opção "incluir exames sem amostra recebida": todos os exames ainda sem resultado, com aviso quando faltar a amostra
+  const { data: allRows = [], isLoading: allLoading, error: allError, refetch: refetchAll } = useQuery({
+    queryKey: ["result-all"],
+    enabled: canEnterResults && !scoped && includeAll,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("order_items")
+        .select(ITEM_SELECT)
+        .in("status", ["pendente", "coletado"])
+        .limit(500);
+      if (error) throw error;
+      return ((data ?? []) as any[]).sort((a, b) => (b.order?.order_number ?? 0) - (a.order?.order_number ?? 0));
+    },
+  });
+
+  const widened = scoped || includeAll; // mostra exames fora da fila normal, com aviso
+  const data = (scoped ? scopedRows : includeAll ? allRows : queue) as any[];
+  const loadError = scoped ? scopedError : includeAll ? allError : queueError;
+  const loadingNow = scoped ? scopedLoading : includeAll ? allLoading : queueLoading && canEnterResults;
+  const reloadNow = () => (scoped ? refetchScoped() : includeAll ? refetchAll() : refetchQueue());
   const examIds = useMemo(() => Array.from(new Set((data as any[]).map((r) => r.exam_id).filter(Boolean))), [data]);
 
   const { data: parametersByExam = new Map() } = useQuery({
@@ -195,14 +217,36 @@ function ResultadosPage() {
           <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
           <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Buscar paciente, nº do pedido ou exame" className="pl-9" aria-label="Buscar" />
         </div>
-        {scoped && scopedLoading && <div className="text-muted-foreground text-sm">Carregando...</div>}
-        {filtered.length === 0 && !(scoped && scopedLoading) && (
+        {!scoped && (
+          <label className="mb-3 flex items-start gap-2 text-sm">
+            <Checkbox className="mt-0.5" checked={includeAll} onCheckedChange={(v) => setIncludeAll(!!v)} aria-label="Incluir exames sem amostra recebida" />
+            <span>
+              Incluir exames ainda sem amostra recebida
+              <span className="block text-xs text-muted-foreground">Por padrão a fila mostra só exames com a amostra recebida na bancada. Marque para lançar também os que ainda aguardam coleta ou recebimento.</span>
+            </span>
+          </label>
+        )}
+        {loadError && (
+          <div role="alert" className="mb-3 flex flex-wrap items-start gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Não foi possível carregar os exames.</div>
+              <div className="break-words text-xs">{String((loadError as Error)?.message ?? "Erro desconhecido")}</div>
+              <div className="mt-1 text-xs">Se o erro continuar, envie este texto ao suporte.</div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => reloadNow()}>Tentar de novo</Button>
+          </div>
+        )}
+        {loadingNow && <div className="text-muted-foreground text-sm">Carregando...</div>}
+        {filtered.length === 0 && !loadingNow && !loadError && (
           <div className="text-muted-foreground text-sm">
             {text.trim()
               ? "Nenhum exame encontrado para essa busca."
               : scoped
                 ? "Este exame ou pedido não tem exames aguardando resultado (já lançados ou liberados)."
-                : "Nenhum exame aguardando lançamento."}
+                : includeAll
+                  ? "Nenhum exame aguardando resultado."
+                  : "Nenhum exame com amostra recebida aguardando lançamento. Para lançar os que ainda não tiveram a amostra recebida, marque \"Incluir exames ainda sem amostra recebida\" ou abra o pedido do paciente."}
           </div>
         )}
         <div className="space-y-3">
@@ -210,7 +254,7 @@ function ResultadosPage() {
             <ResultItemCard
               key={r.id}
               item={r}
-              warning={scoped ? entryWarning(r) : null}
+              warning={widened ? entryWarning(r) : null}
               companyId={companyId}
               parameters={(parametersByExam as Map<string, any[]>).get(r.exam_id) ?? []}
               rangesByExam={(rangesGrouped as any).byExam as Map<string, ReferenceRange[]>}
@@ -218,6 +262,7 @@ function ResultadosPage() {
               onSaved={() => {
                 qc.invalidateQueries({ queryKey: ["pending-results"] });
                 qc.invalidateQueries({ queryKey: ["result-scope"] });
+                qc.invalidateQueries({ queryKey: ["result-all"] });
                 qc.invalidateQueries({ queryKey: ["pending-release"] });
                 qc.invalidateQueries({ queryKey: ["order"] });
               }}

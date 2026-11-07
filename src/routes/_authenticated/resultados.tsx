@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useMyRoles } from "@/hooks/useMyRoles";
 import { useCompanyId } from "@/hooks/useCompanyId";
-import { ShieldAlert, AlertTriangle } from "lucide-react";
+import { ShieldAlert, AlertTriangle, Search, ArrowLeft } from "lucide-react";
 import { computeAgeMonths, findMatchingRange, type ReferenceRange } from "@/lib/exam-parameters";
 import { evaluateFormula, formatCalculated } from "@/lib/formula";
 import { getFlag, isPanic, flagLabel, parseNumeric, type ResultFlag } from "@/lib/result-flags";
@@ -22,34 +22,72 @@ import {
 
 export const Route = createFileRoute("/_authenticated/resultados")({
   head: () => ({ meta: [{ title: "Resultados — LIS" }] }),
+  // ?item=<exame do pedido> ou ?pedido=<pedido>: mostra só esse exame/pedido, mesmo antes de a amostra ser recebida
+  validateSearch: (s: Record<string, unknown>): { item?: string; pedido?: string } => {
+    const uuid = (v: unknown) => (typeof v === "string" && /^[0-9a-f-]{32,36}$/i.test(v) ? v : undefined);
+    return { item: uuid(s.item), pedido: uuid(s.pedido) };
+  },
   component: ResultadosPage,
 });
+
+const ITEM_SELECT =
+  "id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)";
+
+const isShipped = (r: any) => (Array.isArray(r.support_shipment_items) ? r.support_shipment_items.length > 0 : !!r.support_shipment_items);
+const sampleStatuses = (r: any): (string | undefined)[] => (r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status]);
+
+// Aviso quando se lança um resultado antes do fluxo normal (amostra recebida / apoio enviado)
+function entryWarning(r: any): string | null {
+  if (r.exam?.support_lab_id) return isShipped(r) ? null : "Exame de apoio ainda não enviado ao laboratório. Confira antes de lançar.";
+  const st = sampleStatuses(r);
+  if (st.length === 0 || st.some((x) => !x)) return "Este exame ainda não tem amostra coletada. Confira antes de lançar.";
+  if (st.some((x) => x === "rejeitada")) return "A amostra deste exame foi rejeitada. Confira antes de lançar.";
+  if (st.every((x) => x === "recebida")) return null;
+  return "A amostra ainda não foi recebida na bancada. Confira antes de lançar.";
+}
 
 function ResultadosPage() {
   const qc = useQueryClient();
   const { canEnterResults } = useMyRoles();
   const companyId = useCompanyId();
   const [sector, setSector] = useState<string>("__all__");
+  const [text, setText] = useState("");
+  const { item: itemId, pedido: orderId } = Route.useSearch();
+  const scoped = !!(itemId || orderId);
 
-  const { data = [] } = useQuery({
+  const { data: queue = [] } = useQuery({
     queryKey: ["pending-results"],
-    enabled: canEnterResults,
+    enabled: canEnterResults && !scoped,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)")
+        .select(ITEM_SELECT)
         .in("status", ["coletado"]);
       if (error) throw error;
       // todas as amostras do exame precisam ter sido recebidas (exames com mais de uma amostra)
       return (data ?? []).filter((r: any) => {
         // Exame de apoio: aparece só depois de enviado (a amostra não passa pela bancada daqui).
-        if (r.exam?.support_lab_id) return Array.isArray(r.support_shipment_items) ? r.support_shipment_items.length > 0 : !!r.support_shipment_items;
+        if (r.exam?.support_lab_id) return isShipped(r);
         const statuses: string[] = r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status];
         return statuses.length > 0 && statuses.every((st) => st === "recebida");
       });
     },
   });
 
+  // Modo "um exame / um pedido": traz os exames ainda sem resultado, mesmo sem amostra recebida
+  const { data: scopedRows = [], isLoading: scopedLoading } = useQuery({
+    queryKey: ["result-scope", itemId ?? null, orderId ?? null],
+    enabled: canEnterResults && scoped,
+    queryFn: async () => {
+      let q = supabase.from("order_items").select(ITEM_SELECT).in("status", ["pendente", "coletado"]);
+      q = itemId ? q.eq("id", itemId) : q.eq("order_id", orderId!);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const data = (scoped ? scopedRows : queue) as any[];
   const examIds = useMemo(() => Array.from(new Set((data as any[]).map((r) => r.exam_id).filter(Boolean))), [data]);
 
   const { data: parametersByExam = new Map() } = useQuery({
@@ -105,7 +143,13 @@ function ResultadosPage() {
     return Array.from(s).sort();
   }, [data]);
 
-  const filtered = (data as any[]).filter((r) => sector === "__all__" || r.exam?.sector === sector);
+  const needle = text.trim().replace(/^#/, "").toLowerCase();
+  const matches = (r: any) =>
+    !needle ||
+    [r.order?.patient?.name, r.order?.patient?.code, r.order?.order_number, r.exam?.code, r.exam?.name].some((v) =>
+      String(v ?? "").toLowerCase().includes(needle),
+    );
+  const filtered = (data as any[]).filter((r) => (sector === "__all__" || r.exam?.sector === sector) && matches(r));
 
   if (!canEnterResults) {
     return (
@@ -121,7 +165,7 @@ function ResultadosPage() {
     <>
       <PageHeader
         title="Lançamento de resultados"
-        description="Exames com amostra recebida aguardando resultado"
+        description={scoped ? "Lançamento direto do exame ou do pedido" : "Exames com amostra recebida aguardando resultado"}
         actions={
           <Select value={sector} onValueChange={setSector}>
             <SelectTrigger className="w-48"><SelectValue placeholder="Setor" /></SelectTrigger>
@@ -133,19 +177,49 @@ function ResultadosPage() {
         }
       />
       <PageBody>
-        {filtered.length === 0 && <div className="text-muted-foreground text-sm">Nenhum exame aguardando lançamento.</div>}
+        {scoped && (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm">
+            <span>
+              {itemId ? "Mostrando só este exame" : "Mostrando só os exames deste pedido"}
+              {data[0]?.order ? <> · <b>#{data[0].order.order_number}</b> {data[0].order.patient?.name}</> : null}
+            </span>
+            <span className="flex gap-2">
+              {(orderId || data[0]?.order?.id) && (
+                <Button asChild size="sm" variant="outline"><Link to="/pedidos/$orderId" params={{ orderId: (orderId ?? data[0].order.id) as string }}><ArrowLeft className="mr-1 size-4" />Voltar ao pedido</Link></Button>
+              )}
+              <Button asChild size="sm" variant="ghost"><Link to="/resultados">Ver a fila completa</Link></Button>
+            </span>
+          </div>
+        )}
+        <div className="relative mb-3 max-w-md">
+          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+          <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Buscar paciente, nº do pedido ou exame" className="pl-9" aria-label="Buscar" />
+        </div>
+        {scoped && scopedLoading && <div className="text-muted-foreground text-sm">Carregando...</div>}
+        {filtered.length === 0 && !(scoped && scopedLoading) && (
+          <div className="text-muted-foreground text-sm">
+            {text.trim()
+              ? "Nenhum exame encontrado para essa busca."
+              : scoped
+                ? "Este exame ou pedido não tem exames aguardando resultado (já lançados ou liberados)."
+                : "Nenhum exame aguardando lançamento."}
+          </div>
+        )}
         <div className="space-y-3">
           {filtered.map((r: any) => (
             <ResultItemCard
               key={r.id}
               item={r}
+              warning={scoped ? entryWarning(r) : null}
               companyId={companyId}
               parameters={(parametersByExam as Map<string, any[]>).get(r.exam_id) ?? []}
               rangesByExam={(rangesGrouped as any).byExam as Map<string, ReferenceRange[]>}
               rangesByParam={(rangesGrouped as any).byParam as Map<string, ReferenceRange[]>}
               onSaved={() => {
                 qc.invalidateQueries({ queryKey: ["pending-results"] });
+                qc.invalidateQueries({ queryKey: ["result-scope"] });
                 qc.invalidateQueries({ queryKey: ["pending-release"] });
+                qc.invalidateQueries({ queryKey: ["order"] });
               }}
             />
           ))}
@@ -175,9 +249,9 @@ function FlagNote({ flag }: { flag: ResultFlag }) {
 }
 
 function ResultItemCard({
-  item, companyId, parameters, rangesByExam, rangesByParam, onSaved,
+  item, warning, companyId, parameters, rangesByExam, rangesByParam, onSaved,
 }: {
-  item: any; companyId: string | null; parameters: any[];
+  item: any; warning?: string | null; companyId: string | null; parameters: any[];
   rangesByExam: Map<string, ReferenceRange[]>; rangesByParam: Map<string, ReferenceRange[]>;
   onSaved: () => void;
 }) {
@@ -373,6 +447,12 @@ function ResultItemCard({
           <Input value={method} onChange={(e) => setMethod(e.target.value)} placeholder={item.exam?.default_method ?? "Método"} />
         </div>
       </div>
+
+      {warning && (
+        <div role="note" className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />{warning}
+        </div>
+      )}
 
       {isMulti ? (
         <div className="space-y-2">

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,10 @@ function formatCode(v: string) {
 
 export const Route = createFileRoute("/portal")({
   ssr: false,
+  // ?lab=<endereço do laboratório>: mostra o nome e a logo do laboratório antes do login
+  validateSearch: (s: Record<string, unknown>): { lab?: string } => ({
+    lab: typeof s.lab === "string" && /^[a-z0-9-]{3,40}$/i.test(s.lab) ? s.lab.toLowerCase() : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Portal do paciente — LIS" },
@@ -31,6 +36,21 @@ function PortalLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
+  const { lab } = Route.useSearch();
+  const { data: brand, isLoading: brandLoading } = useQuery({
+    queryKey: ["portal-brand", lab],
+    enabled: !!lab,
+    retry: false,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const r = await fetch(`/api/public/portal-brand?lab=${encodeURIComponent(lab!)}`);
+      if (!r.ok) return null;
+      return (await r.json()) as { name: string; logoUrl: string | null };
+    },
+  });
+  useEffect(() => {
+    if (brand?.name) document.title = `Portal do paciente — ${brand.name}`;
+  }, [brand?.name]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,12 +94,30 @@ function PortalLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col">
-      <header className="mx-auto flex w-full max-w-md items-center gap-2 px-4 pt-6">
-        <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-5" /></span>
-        <div className="leading-tight">
-          <div className="font-semibold">LabIS</div>
-          <div className="text-xs text-muted-foreground">Portal do paciente</div>
-        </div>
+      <header className="mx-auto flex w-full max-w-md items-center gap-3 px-4 pt-6" data-testid="portal-header">
+        {lab && brandLoading ? (
+          <div className="h-10 w-48 animate-pulse rounded-md bg-muted" aria-hidden />
+        ) : brand ? (
+          <>
+            {brand.logoUrl ? (
+              <img src={brand.logoUrl} alt={`Logo de ${brand.name}`} className="h-10 max-w-[140px] shrink-0 object-contain" />
+            ) : (
+              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-primary text-lg font-semibold text-primary-foreground" aria-hidden>{brand.name.trim().charAt(0).toUpperCase()}</span>
+            )}
+            <div className="min-w-0 leading-tight">
+              <div className="truncate font-semibold">{brand.name}</div>
+              <div className="text-xs text-muted-foreground">Portal do paciente</div>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-5" /></span>
+            <div className="leading-tight">
+              <div className="font-semibold">LabIS</div>
+              <div className="text-xs text-muted-foreground">Portal do paciente</div>
+            </div>
+          </>
+        )}
       </header>
 
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-6 space-y-4">
@@ -164,11 +202,11 @@ function PortalLoginPage() {
         <section className="rounded-xl border bg-card p-5 text-sm space-y-2">
           <div className="flex items-start gap-2"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" /><span>Seus dados são protegidos. Não compartilhe o código nem a senha.</span></div>
           <div className="flex items-start gap-2"><Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" /><span>Por segurança, a sessão termina após 20 minutos e, depois de 5 tentativas erradas, o acesso fica bloqueado por 15 minutos.</span></div>
-          <div className="flex items-start gap-2"><HelpCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" /><span>Perdeu o código ou a senha, ou o laudo ainda não aparece? Procure o laboratório, que gera um novo acesso.</span></div>
+          <div className="flex items-start gap-2"><HelpCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" /><span>Perdeu o código ou a senha, ou o laudo ainda não aparece? Procure {brand ? brand.name : "o laboratório"}, que gera um novo acesso.</span></div>
         </section>
       </main>
 
-      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">Portal do paciente · LabIS</footer>
+      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">{brand ? "Tecnologia LabIS" : "Portal do paciente · LabIS"}</footer>
     </div>
   );
 }

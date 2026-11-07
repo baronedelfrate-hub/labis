@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Clock, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
+import { ClipboardList, Clock, CheckCircle2, AlertTriangle, Plus, Send } from "lucide-react";
+import { useSupportSummary } from "@/hooks/useSupportReturns";
 import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -42,6 +43,7 @@ function Dashboard() {
         <Button asChild><Link to="/pedidos/novo"><Plus className="size-4 mr-1" />Novo pedido</Link></Button>
       } />
       <PageBody>
+        <SupportAlert />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={ClipboardList} label="Pedidos hoje" value={total} tone="primary" to={{ data: today }} />
           <Stat icon={Clock} label="Em aberto" value={abertos} tone="info" to={{ visao: "andamento", data: today }} />
@@ -70,4 +72,30 @@ function Stat({ icon: Icon, label, value, tone, to }: { icon: LucideIcon; label:
     </div>
   );
   return to ? <Link to="/pedidos" search={to} className="block">{card}</Link> : card;
+}
+
+// Aviso dos exames enviados a laboratórios de apoio que ainda não voltaram. Só aparece se houver algum aguardando.
+function SupportAlert() {
+  const { waiting, late, dueToday } = useSupportSummary();
+  if (waiting === 0) return null;
+  const tone = late > 0
+    ? "border-red-300 bg-red-50 text-red-900 dark:bg-red-950/30 dark:text-red-200"
+    : dueToday > 0
+      ? "border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+      : "bg-card text-muted-foreground";
+  return (
+    <Link to="/apoio" search={{ aba: "retorno" }} className={`mb-4 flex flex-wrap items-center gap-3 rounded-lg border px-4 py-3 text-sm transition hover:shadow-sm ${tone}`} data-testid="support-alert">
+      {late > 0 ? <AlertTriangle className="size-5 shrink-0" /> : <Send className="size-5 shrink-0" />}
+      <span className="flex-1">
+        {late > 0 ? (
+          <><b>{late} exame{late > 1 ? "s" : ""} de apoio com resultado atrasado.</b>{dueToday > 0 ? ` ${dueToday} vence${dueToday > 1 ? "m" : ""} hoje.` : ""} {waiting} aguardando retorno no total.</>
+        ) : dueToday > 0 ? (
+          <><b>{dueToday} exame{dueToday > 1 ? "s" : ""} de apoio vence{dueToday > 1 ? "m" : ""} hoje.</b> {waiting} aguardando retorno no total.</>
+        ) : (
+          <>{waiting} exame{waiting > 1 ? "s" : ""} aguardando retorno do apoio, todos no prazo.</>
+        )}
+      </span>
+      <span className="text-xs font-medium underline">Ver</span>
+    </Link>
+  );
 }

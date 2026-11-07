@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useMyRoles } from "@/hooks/useMyRoles";
+import { useSupportSummary } from "@/hooks/useSupportReturns";
 import { HelpButton } from "@/components/HelpButton";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -57,6 +58,7 @@ function AuthedLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const isAdmin = useIsAdmin();
   const myRoles = useMyRoles();
+  const support = useSupportSummary();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
@@ -101,7 +103,10 @@ function AuthedLayout() {
                 isActive(item.to) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60",
               )}>
                 <item.icon className="size-4" />{item.label}
-                {isActive(item.to) && <ChevronRight className="ml-auto size-3.5 opacity-60" />}
+                {item.to === "/apoio" && support.late > 0 && (
+                  <span className="ml-auto rounded-full bg-red-600 px-1.5 text-[10px] font-semibold text-white" aria-label={`${support.late} exames de apoio atrasados`}>{support.late}</span>
+                )}
+                {isActive(item.to) && <ChevronRight className={cn("size-3.5 opacity-60", !(item.to === "/apoio" && support.late > 0) && "ml-auto")} />}
               </Link>
             );
           })}

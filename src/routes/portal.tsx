@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setPortalToken } from "@/lib/portal-session";
+import { FlaskConical, KeyRound, Lock, FileText, ShieldCheck, Clock, HelpCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
+
+// Mantém só letras e números (sem I/O/0/1 confundíveis não é garantido aqui) e coloca o traço depois de 4 caracteres.
+function formatCode(v: string) {
+  const c = v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  return c.length > 4 ? `${c.slice(0, 4)}-${c.slice(4)}` : c;
+}
 
 export const Route = createFileRoute("/portal")({
   ssr: false,
@@ -23,6 +30,7 @@ function PortalLoginPage() {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -65,44 +73,102 @@ function PortalLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm rounded-lg border bg-card shadow-sm p-6">
-        <h1 className="text-lg font-semibold">Portal do paciente</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Informe o código de acesso e a senha fornecidos pelo laboratório.
-        </p>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="code">Código de acesso</Label>
-            <Input
-              id="code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="XXXX-XXXX"
-              autoComplete="off"
-              className="uppercase tracking-widest tabular-nums"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pin">Senha (6 dígitos)</Label>
-            <Input
-              id="pin"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              className="tabular-nums tracking-widest"
-              maxLength={6}
-              required
-            />
-          </div>
-          {error && <div className="text-sm text-destructive">{error}</div>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Verificando..." : "Acessar laudo"}
-          </Button>
-        </form>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col">
+      <header className="mx-auto flex w-full max-w-md items-center gap-2 px-4 pt-6">
+        <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-5" /></span>
+        <div className="leading-tight">
+          <div className="font-semibold">LabIS</div>
+          <div className="text-xs text-muted-foreground">Portal do paciente</div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-md flex-1 px-4 py-6 space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Acesse seu laudo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Veja e imprima os resultados dos seus exames, com segurança, a qualquer hora.
+          </p>
+        </div>
+
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+            <div className="space-y-1.5">
+              <Label htmlFor="code">Código de acesso</Label>
+              <Input
+                id="code"
+                value={code}
+                onChange={(e) => setCode(formatCode(e.target.value))}
+                placeholder="XXXX-XXXX"
+                autoComplete="off"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                className="uppercase tracking-widest tabular-nums"
+                aria-describedby="code-help"
+                required
+              />
+              <p id="code-help" className="text-xs text-muted-foreground">Está na folha entregue pelo laboratório. Pode digitar sem o traço.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pin">Senha (6 números)</Label>
+              <div className="relative">
+                <Input
+                  id="pin"
+                  type={showPin ? "text" : "password"}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  className="pr-10 tabular-nums tracking-widest"
+                  aria-describedby="pin-help"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin(v => !v)}
+                  aria-label={showPin ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                >
+                  {showPin ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <p id="pin-help" className="text-xs text-muted-foreground">Informada pelo laboratório, separada do código.</p>
+            </div>
+            {error && (
+              <div role="alert" className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" /><span>{error}</span>
+              </div>
+            )}
+            <Button type="submit" className="w-full" size="lg" disabled={loading || code.length < 9 || pin.length < 6}>
+              {loading ? "Verificando..." : "Acessar laudo"}
+            </Button>
+          </form>
+        </div>
+
+        <section aria-labelledby="como" className="rounded-xl border bg-card p-5">
+          <h2 id="como" className="text-sm font-medium">Como acessar</h2>
+          <ol className="mt-3 space-y-3 text-sm">
+            {[
+              { icon: KeyRound, t: "Digite o código", d: "Está na folha que o laboratório entregou." },
+              { icon: Lock, t: "Digite a senha de 6 números", d: "O laboratório informa a senha separadamente." },
+              { icon: FileText, t: "Veja e imprima o laudo", d: "O laudo fica disponível quando todos os exames estiverem liberados." },
+            ].map((s, i) => (
+              <li key={s.t} className="flex gap-3">
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"><s.icon className="size-4" /></span>
+                <div><div className="font-medium">{i + 1}. {s.t}</div><div className="text-muted-foreground">{s.d}</div></div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="rounded-xl border bg-card p-5 text-sm space-y-2">
+          <div className="flex items-start gap-2"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-success" /><span>Seus dados são protegidos. Não compartilhe o código nem a senha.</span></div>
+          <div className="flex items-start gap-2"><Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" /><span>Por segurança, a sessão termina após 20 minutos e, depois de 5 tentativas erradas, o acesso fica bloqueado por 15 minutos.</span></div>
+          <div className="flex items-start gap-2"><HelpCircle className="mt-0.5 size-4 shrink-0 text-muted-foreground" /><span>Perdeu o código ou a senha, ou o laudo ainda não aparece? Procure o laboratório, que gera um novo acesso.</span></div>
+        </section>
+      </main>
+
+      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">Portal do paciente · LabIS</footer>
     </div>
   );
 }

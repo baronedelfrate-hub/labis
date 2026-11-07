@@ -9,7 +9,7 @@ import { BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 export type LegacyExam = {
-  code: string; name: string; amb_code: string | null; sector: string | null; material: string | null;
+  code: string; name: string; amb_code: string | null; sector: string | null; price_sector: string | null; material: string | null;
   days: number | null; fasting_hours: number | null; is_text: boolean;
 };
 
@@ -35,7 +35,7 @@ export function LegacyCatalogPicker({ onPick }: { onPick: (e: LegacyExam) => voi
       const q = debounced.replace(/[%,()*:]/g, " ").trim();
       const { data, error } = await supabase
         .from("xlab_legacy_exams")
-        .select("code, name, amb_code, sector, material, days, fasting_hours, is_text")
+        .select("code, name, amb_code, sector, price_sector, material, days, fasting_hours, is_text")
         .or(`code.ilike.${q}%,name.ilike.%${q}%`)
         .order("code")
         .limit(80);

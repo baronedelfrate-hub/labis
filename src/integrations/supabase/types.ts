@@ -493,6 +493,8 @@ export type Database = {
           material: string | null
           name: string
           preparation_instructions: string | null
+          price_sector: string | null
+          tech_sector: string | null
           sector: string | null
           standard_notes: string | null
           tiss_codigo_procedimento: string | null
@@ -513,6 +515,8 @@ export type Database = {
           material?: string | null
           name: string
           preparation_instructions?: string | null
+          price_sector?: string | null
+          tech_sector?: string | null
           sector?: string | null
           standard_notes?: string | null
           tiss_codigo_procedimento?: string | null
@@ -533,6 +537,8 @@ export type Database = {
           material?: string | null
           name?: string
           preparation_instructions?: string | null
+          price_sector?: string | null
+          tech_sector?: string | null
           sector?: string | null
           standard_notes?: string | null
           tiss_codigo_procedimento?: string | null
@@ -1776,6 +1782,24 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      xlab_legacy_sectors: {
+        Row: {
+          code: string
+          kind: string
+          name: string
+        }
+        Insert: {
+          code: string
+          kind: string
+          name: string
+        }
+        Update: {
+          code?: string
+          kind?: string
+          name?: string
         }
         Relationships: []
       }

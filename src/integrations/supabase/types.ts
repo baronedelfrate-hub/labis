@@ -494,6 +494,7 @@ export type Database = {
           name: string
           preparation_instructions: string | null
           price_sector: string | null
+          support_lab_id: string | null
           tech_sector: string | null
           sector: string | null
           standard_notes: string | null
@@ -516,6 +517,7 @@ export type Database = {
           name: string
           preparation_instructions?: string | null
           price_sector?: string | null
+          support_lab_id?: string | null
           tech_sector?: string | null
           sector?: string | null
           standard_notes?: string | null
@@ -538,6 +540,7 @@ export type Database = {
           name?: string
           preparation_instructions?: string | null
           price_sector?: string | null
+          support_lab_id?: string | null
           tech_sector?: string | null
           sector?: string | null
           standard_notes?: string | null
@@ -1717,6 +1720,102 @@ export type Database = {
           codigo?: string
           created_at?: string
           descricao?: string
+        }
+        Relationships: []
+      }
+      support_labs: {
+        Row: {
+          active: boolean
+          company_id: string
+          contact: string | null
+          created_at: string
+          email: string | null
+          id: string
+          legacy_code: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          turnaround_days: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          company_id: string
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          legacy_code?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          turnaround_days?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          company_id?: string
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          legacy_code?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          turnaround_days?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_shipment_items: {
+        Row: {
+          id: string
+          order_item_id: string
+          shipment_id: string
+        }
+        Insert: {
+          id?: string
+          order_item_id: string
+          shipment_id: string
+        }
+        Update: {
+          id?: string
+          order_item_id?: string
+          shipment_id?: string
+        }
+        Relationships: []
+      }
+      support_shipments: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          number: number
+          sent_at: string
+          sent_by: string | null
+          support_lab_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          number?: number
+          sent_at?: string
+          sent_by?: string | null
+          support_lab_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          number?: number
+          sent_at?: string
+          sent_by?: string | null
+          support_lab_id?: string
         }
         Relationships: []
       }

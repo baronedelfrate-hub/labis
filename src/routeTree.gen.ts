@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as AuthenticatedApoioRouteImport } from './routes/_authenticated/apoio'
 import { Route as AuthenticatedColetaRouteImport } from './routes/_authenticated/coleta'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -22,6 +23,7 @@ import { Route as PortalLaudoRouteImport } from './routes/portal_.laudo'
 import { Route as AuthenticatedCadastrosConveniosRouteImport } from './routes/_authenticated/cadastros.convenios'
 import { Route as AuthenticatedCadastrosExamesRouteImport } from './routes/_authenticated/cadastros.exames'
 import { Route as AuthenticatedCadastrosGruposExamesRouteImport } from './routes/_authenticated/cadastros.grupos-exames'
+import { Route as AuthenticatedCadastrosLaboratoriosApoioRouteImport } from './routes/_authenticated/cadastros.laboratorios-apoio'
 import { Route as AuthenticatedCadastrosMedicosRouteImport } from './routes/_authenticated/cadastros.medicos'
 import { Route as AuthenticatedCadastrosPacientesRouteImport } from './routes/_authenticated/cadastros.pacientes'
 import { Route as AuthenticatedCadastrosTabelasPrecoRouteImport } from './routes/_authenticated/cadastros.tabelas-preco'
@@ -35,6 +37,7 @@ import { Route as AuthenticatedPedidosOrderIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedPedidosNovoRouteImport } from './routes/_authenticated/pedidos.novo'
 import { Route as ApiPublicPortalLaudoRouteImport } from './routes/api/public/portal-laudo'
 import { Route as ApiPublicPortalLoginRouteImport } from './routes/api/public/portal-login'
+import { Route as AuthenticatedApoioRomaneioShipmentIdRouteImport } from './routes/_authenticated/apoio_.romaneio.$shipmentId'
 import { Route as AuthenticatedFinanceiroLotesIndexRouteImport } from './routes/_authenticated/financeiro.lotes.index'
 import { Route as AuthenticatedFinanceiroLotesBatchIdRouteImport } from './routes/_authenticated/financeiro.lotes.$batchId'
 import { Route as AuthenticatedPedidosOrderIdComprovanteRouteImport } from './routes/_authenticated/pedidos.$orderId_.comprovante'
@@ -59,6 +62,11 @@ const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApoioRoute = AuthenticatedApoioRouteImport.update({
+  id: '/apoio',
+  path: '/apoio',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedColetaRoute = AuthenticatedColetaRouteImport.update({
   id: '/coleta',
@@ -107,6 +115,12 @@ const AuthenticatedCadastrosGruposExamesRoute =
   AuthenticatedCadastrosGruposExamesRouteImport.update({
     id: '/cadastros/grupos-exames',
     path: '/cadastros/grupos-exames',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedCadastrosLaboratoriosApoioRoute =
+  AuthenticatedCadastrosLaboratoriosApoioRouteImport.update({
+    id: '/cadastros/laboratorios-apoio',
+    path: '/cadastros/laboratorios-apoio',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCadastrosMedicosRoute =
@@ -185,6 +199,12 @@ const ApiPublicPortalLoginRoute = ApiPublicPortalLoginRouteImport.update({
   path: '/api/public/portal-login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedApoioRomaneioShipmentIdRoute =
+  AuthenticatedApoioRomaneioShipmentIdRouteImport.update({
+    id: '/apoio_/romaneio/$shipmentId',
+    path: '/apoio/romaneio/$shipmentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFinanceiroLotesIndexRoute =
   AuthenticatedFinanceiroLotesIndexRouteImport.update({
     id: '/financeiro/lotes/',
@@ -220,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/portal': typeof PortalRoute
+  '/apoio': typeof AuthenticatedApoioRoute
   '/coleta': typeof AuthenticatedColetaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -229,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/cadastros/convenios': typeof AuthenticatedCadastrosConveniosRoute
   '/cadastros/exames': typeof AuthenticatedCadastrosExamesRoute
   '/cadastros/grupos-exames': typeof AuthenticatedCadastrosGruposExamesRoute
+  '/cadastros/laboratorios-apoio': typeof AuthenticatedCadastrosLaboratoriosApoioRoute
   '/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
@@ -242,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/financeiro/': typeof AuthenticatedFinanceiroIndexRoute
   '/pedidos/': typeof AuthenticatedPedidosIndexRoute
+  '/apoio/romaneio/$shipmentId': typeof AuthenticatedApoioRomaneioShipmentIdRoute
   '/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/pedidos/$orderId/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
   '/pedidos/$orderId/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
@@ -252,6 +275,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/portal': typeof PortalRoute
+  '/apoio': typeof AuthenticatedApoioRoute
   '/coleta': typeof AuthenticatedColetaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -261,6 +285,7 @@ export interface FileRoutesByTo {
   '/cadastros/convenios': typeof AuthenticatedCadastrosConveniosRoute
   '/cadastros/exames': typeof AuthenticatedCadastrosExamesRoute
   '/cadastros/grupos-exames': typeof AuthenticatedCadastrosGruposExamesRoute
+  '/cadastros/laboratorios-apoio': typeof AuthenticatedCadastrosLaboratoriosApoioRoute
   '/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
@@ -274,6 +299,7 @@ export interface FileRoutesByTo {
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/financeiro': typeof AuthenticatedFinanceiroIndexRoute
   '/pedidos': typeof AuthenticatedPedidosIndexRoute
+  '/apoio/romaneio/$shipmentId': typeof AuthenticatedApoioRomaneioShipmentIdRoute
   '/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/pedidos/$orderId/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
   '/pedidos/$orderId/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
@@ -286,6 +312,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/portal': typeof PortalRoute
+  '/_authenticated/apoio': typeof AuthenticatedApoioRoute
   '/_authenticated/coleta': typeof AuthenticatedColetaRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -295,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/cadastros/convenios': typeof AuthenticatedCadastrosConveniosRoute
   '/_authenticated/cadastros/exames': typeof AuthenticatedCadastrosExamesRoute
   '/_authenticated/cadastros/grupos-exames': typeof AuthenticatedCadastrosGruposExamesRoute
+  '/_authenticated/cadastros/laboratorios-apoio': typeof AuthenticatedCadastrosLaboratoriosApoioRoute
   '/_authenticated/cadastros/medicos': typeof AuthenticatedCadastrosMedicosRoute
   '/_authenticated/cadastros/pacientes': typeof AuthenticatedCadastrosPacientesRoute
   '/_authenticated/cadastros/tabelas-preco': typeof AuthenticatedCadastrosTabelasPrecoRoute
@@ -308,6 +336,7 @@ export interface FileRoutesById {
   '/api/public/portal-login': typeof ApiPublicPortalLoginRoute
   '/_authenticated/financeiro/': typeof AuthenticatedFinanceiroIndexRoute
   '/_authenticated/pedidos/': typeof AuthenticatedPedidosIndexRoute
+  '/_authenticated/apoio_/romaneio/$shipmentId': typeof AuthenticatedApoioRomaneioShipmentIdRoute
   '/_authenticated/financeiro/lotes/$batchId': typeof AuthenticatedFinanceiroLotesBatchIdRoute
   '/_authenticated/pedidos/$orderId_/comprovante': typeof AuthenticatedPedidosOrderIdComprovanteRoute
   '/_authenticated/pedidos/$orderId_/etiquetas': typeof AuthenticatedPedidosOrderIdEtiquetasRoute
@@ -320,6 +349,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/portal'
+    | '/apoio'
     | '/coleta'
     | '/configuracoes'
     | '/dashboard'
@@ -329,6 +359,7 @@ export interface FileRouteTypes {
     | '/cadastros/convenios'
     | '/cadastros/exames'
     | '/cadastros/grupos-exames'
+    | '/cadastros/laboratorios-apoio'
     | '/cadastros/medicos'
     | '/cadastros/pacientes'
     | '/cadastros/tabelas-preco'
@@ -342,6 +373,7 @@ export interface FileRouteTypes {
     | '/api/public/portal-login'
     | '/financeiro/'
     | '/pedidos/'
+    | '/apoio/romaneio/$shipmentId'
     | '/financeiro/lotes/$batchId'
     | '/pedidos/$orderId/comprovante'
     | '/pedidos/$orderId/etiquetas'
@@ -352,6 +384,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/portal'
+    | '/apoio'
     | '/coleta'
     | '/configuracoes'
     | '/dashboard'
@@ -361,6 +394,7 @@ export interface FileRouteTypes {
     | '/cadastros/convenios'
     | '/cadastros/exames'
     | '/cadastros/grupos-exames'
+    | '/cadastros/laboratorios-apoio'
     | '/cadastros/medicos'
     | '/cadastros/pacientes'
     | '/cadastros/tabelas-preco'
@@ -374,6 +408,7 @@ export interface FileRouteTypes {
     | '/api/public/portal-login'
     | '/financeiro'
     | '/pedidos'
+    | '/apoio/romaneio/$shipmentId'
     | '/financeiro/lotes/$batchId'
     | '/pedidos/$orderId/comprovante'
     | '/pedidos/$orderId/etiquetas'
@@ -385,6 +420,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/portal'
+    | '/_authenticated/apoio'
     | '/_authenticated/coleta'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
@@ -394,6 +430,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros/convenios'
     | '/_authenticated/cadastros/exames'
     | '/_authenticated/cadastros/grupos-exames'
+    | '/_authenticated/cadastros/laboratorios-apoio'
     | '/_authenticated/cadastros/medicos'
     | '/_authenticated/cadastros/pacientes'
     | '/_authenticated/cadastros/tabelas-preco'
@@ -407,6 +444,7 @@ export interface FileRouteTypes {
     | '/api/public/portal-login'
     | '/_authenticated/financeiro/'
     | '/_authenticated/pedidos/'
+    | '/_authenticated/apoio_/romaneio/$shipmentId'
     | '/_authenticated/financeiro/lotes/$batchId'
     | '/_authenticated/pedidos/$orderId_/comprovante'
     | '/_authenticated/pedidos/$orderId_/etiquetas'
@@ -453,6 +491,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal'
       preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/apoio': {
+      id: '/_authenticated/apoio'
+      path: '/apoio'
+      fullPath: '/apoio'
+      preLoaderRoute: typeof AuthenticatedApoioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/coleta': {
       id: '/_authenticated/coleta'
@@ -515,6 +560,13 @@ declare module '@tanstack/react-router' {
       path: '/cadastros/grupos-exames'
       fullPath: '/cadastros/grupos-exames'
       preLoaderRoute: typeof AuthenticatedCadastrosGruposExamesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros/laboratorios-apoio': {
+      id: '/_authenticated/cadastros/laboratorios-apoio'
+      path: '/cadastros/laboratorios-apoio'
+      fullPath: '/cadastros/laboratorios-apoio'
+      preLoaderRoute: typeof AuthenticatedCadastrosLaboratoriosApoioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastros/medicos': {
@@ -608,6 +660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/apoio_/romaneio/$shipmentId': {
+      id: '/_authenticated/apoio_/romaneio/$shipmentId'
+      path: '/apoio/romaneio/$shipmentId'
+      fullPath: '/apoio/romaneio/$shipmentId'
+      preLoaderRoute: typeof AuthenticatedApoioRomaneioShipmentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/financeiro/lotes/': {
       id: '/_authenticated/financeiro/lotes/'
       path: '/financeiro/lotes'
@@ -647,6 +706,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedApoioRoute: typeof AuthenticatedApoioRoute
   AuthenticatedColetaRoute: typeof AuthenticatedColetaRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -655,6 +715,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosConveniosRoute: typeof AuthenticatedCadastrosConveniosRoute
   AuthenticatedCadastrosExamesRoute: typeof AuthenticatedCadastrosExamesRoute
   AuthenticatedCadastrosGruposExamesRoute: typeof AuthenticatedCadastrosGruposExamesRoute
+  AuthenticatedCadastrosLaboratoriosApoioRoute: typeof AuthenticatedCadastrosLaboratoriosApoioRoute
   AuthenticatedCadastrosMedicosRoute: typeof AuthenticatedCadastrosMedicosRoute
   AuthenticatedCadastrosPacientesRoute: typeof AuthenticatedCadastrosPacientesRoute
   AuthenticatedCadastrosTabelasPrecoRoute: typeof AuthenticatedCadastrosTabelasPrecoRoute
@@ -666,6 +727,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosNovoRoute: typeof AuthenticatedPedidosNovoRoute
   AuthenticatedFinanceiroIndexRoute: typeof AuthenticatedFinanceiroIndexRoute
   AuthenticatedPedidosIndexRoute: typeof AuthenticatedPedidosIndexRoute
+  AuthenticatedApoioRomaneioShipmentIdRoute: typeof AuthenticatedApoioRomaneioShipmentIdRoute
   AuthenticatedFinanceiroLotesBatchIdRoute: typeof AuthenticatedFinanceiroLotesBatchIdRoute
   AuthenticatedPedidosOrderIdComprovanteRoute: typeof AuthenticatedPedidosOrderIdComprovanteRoute
   AuthenticatedPedidosOrderIdEtiquetasRoute: typeof AuthenticatedPedidosOrderIdEtiquetasRoute
@@ -674,6 +736,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedApoioRoute: AuthenticatedApoioRoute,
   AuthenticatedColetaRoute: AuthenticatedColetaRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -683,6 +746,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosExamesRoute: AuthenticatedCadastrosExamesRoute,
   AuthenticatedCadastrosGruposExamesRoute:
     AuthenticatedCadastrosGruposExamesRoute,
+  AuthenticatedCadastrosLaboratoriosApoioRoute:
+    AuthenticatedCadastrosLaboratoriosApoioRoute,
   AuthenticatedCadastrosMedicosRoute: AuthenticatedCadastrosMedicosRoute,
   AuthenticatedCadastrosPacientesRoute: AuthenticatedCadastrosPacientesRoute,
   AuthenticatedCadastrosTabelasPrecoRoute:
@@ -696,6 +761,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosNovoRoute: AuthenticatedPedidosNovoRoute,
   AuthenticatedFinanceiroIndexRoute: AuthenticatedFinanceiroIndexRoute,
   AuthenticatedPedidosIndexRoute: AuthenticatedPedidosIndexRoute,
+  AuthenticatedApoioRomaneioShipmentIdRoute:
+    AuthenticatedApoioRomaneioShipmentIdRoute,
   AuthenticatedFinanceiroLotesBatchIdRoute:
     AuthenticatedFinanceiroLotesBatchIdRoute,
   AuthenticatedPedidosOrderIdComprovanteRoute:

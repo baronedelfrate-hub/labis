@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/
 import {
   FlaskConical, LayoutDashboard, ClipboardList, Plus, Users, Stethoscope,
   ShieldCheck, Building2, Tags, TestTubes, Layers, LogOut, ChevronRight, UserCog,
-  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu, FileText,
+  Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu, FileText, Truck, Send,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ const workflow = [
   { to: "/coleta", label: "Coleta", icon: Beaker },
   { to: "/resultados", label: "Resultados", icon: ClipboardCheck, requires: "canEnterResults" as const },
   { to: "/liberacao", label: "Liberação", icon: CheckCheck, requires: "canRelease" as const },
+  { to: "/apoio", label: "Envio ao apoio", icon: Send },
 ];
 
 const cadastros = [
@@ -45,6 +46,7 @@ const cadastros = [
   { to: "/cadastros/exames", label: "Exames", icon: TestTubes },
   { to: "/cadastros/grupos-exames", label: "Grupos de exames", icon: Layers },
   { to: "/cadastros/textos-modelo", label: "Textos-modelo", icon: FileText },
+  { to: "/cadastros/laboratorios-apoio", label: "Laboratórios de apoio", icon: Truck },
 ];
 
 function AuthedLayout() {
@@ -163,7 +165,7 @@ function AuthedLayout() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Computador: menu fixo na lateral */}
-      <aside className="hidden md:flex w-60 shrink-0 sticky top-0 h-screen">{sidebar}</aside>
+      <aside className="hidden md:flex w-60 shrink-0 sticky top-0 h-screen print:hidden">{sidebar}</aside>
 
       {/* Celular: menu em gaveta, aberto pelo botão ☰ */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -175,7 +177,7 @@ function AuthedLayout() {
       </Sheet>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="md:hidden sticky top-0 z-30 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-sidebar-foreground">
+        <header className="md:hidden print:hidden sticky top-0 z-30 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-3 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] text-sidebar-foreground">
           <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMenuOpen(true)} aria-label="Abrir menu">
             <Menu className="size-5" />
           </Button>

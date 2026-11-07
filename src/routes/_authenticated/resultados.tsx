@@ -37,11 +37,13 @@ function ResultadosPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status))")
+        .select("id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)")
         .in("status", ["coletado"]);
       if (error) throw error;
       // todas as amostras do exame precisam ter sido recebidas (exames com mais de uma amostra)
       return (data ?? []).filter((r: any) => {
+        // Exame de apoio: aparece só depois de enviado (a amostra não passa pela bancada daqui).
+        if (r.exam?.support_lab_id) return Array.isArray(r.support_shipment_items) ? r.support_shipment_items.length > 0 : !!r.support_shipment_items;
         const statuses: string[] = r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status];
         return statuses.length > 0 && statuses.every((st) => st === "recebida");
       });
@@ -355,7 +357,7 @@ function ResultItemCard({
     <div className={cn("rounded-md border bg-card p-4 space-y-3", panicItems.length > 0 && "border-red-400 ring-1 ring-red-300")}>
       <div className="flex flex-wrap items-start gap-4">
         <div className="text-sm flex-1 min-w-[180px]">
-          <div className="text-xs text-muted-foreground">#{item.order?.order_number} · {item.exam?.code}</div>
+          <div className="text-xs text-muted-foreground">#{item.order?.order_number} · {item.exam?.code}{item.exam?.support_lab?.name && <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-sky-900 dark:bg-sky-900/30 dark:text-sky-200">Apoio: {item.exam.support_lab.name}</span>}</div>
           <div className="font-medium flex flex-wrap items-center gap-2">
             {item.exam?.name}
             {panicItems.length > 0 && (

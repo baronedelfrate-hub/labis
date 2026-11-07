@@ -87,7 +87,7 @@ function ToSend() {
     queryFn: async (): Promise<PendingItem[]> => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, order:orders!inner(id, order_number, status, patient:patients(name, code)), exam:exams!inner(id, code, name, material, support_lab_id), sample:samples(sample_number, material), support_shipment_items(id)")
+        .select("id, order:orders!inner(id, order_number, status, patient:patients(name, code)), exam:exams!inner(id, code, name, material, support_lab_id), sample:samples!order_items_sample_id_fkey(sample_number, material), support_shipment_items(id)")
         .eq("status", "coletado")
         .not("exam.support_lab_id", "is", null)
         .neq("order.status", "cancelado")

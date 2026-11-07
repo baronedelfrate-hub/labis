@@ -17,13 +17,20 @@ export const Route = createFileRoute("/api/public/portal-login")({
           return Response.json({ error: "invalid_credentials" }, { status: 401 });
         }
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        let supabaseAdmin: typeof import("@/integrations/supabase/client.server").supabaseAdmin;
+        try {
+          ({ supabaseAdmin } = await import("@/integrations/supabase/client.server"));
+          void supabaseAdmin.from;
+        } catch (e) {
+          console.error("[portal-login] admin client:", e instanceof Error ? e.message : e);
+          return Response.json({ error: "server_error", stage: "configuracao" }, { status: 500 });
+        }
         const { data, error } = await supabaseAdmin
           .rpc("portal_verify_login", { _code: code, _pin: pin })
           .single();
         if (error) {
-          console.error("[portal-login]", error.message);
-          return Response.json({ error: "server_error" }, { status: 500 });
+          console.error("[portal-login] rpc:", error.message);
+          return Response.json({ error: "server_error", stage: "verificacao" }, { status: 500 });
         }
         const row = data as { status: string; order_id: string | null; locked_until: string | null };
         if (row.status === "locked") {
@@ -42,14 +49,15 @@ export const Route = createFileRoute("/api/public/portal-login")({
           .eq("id", row.order_id)
           .single();
         if (oe || !order) {
-          return Response.json({ error: "server_error" }, { status: 500 });
+          console.error("[portal-login] order:", oe?.message);
+          return Response.json({ error: "server_error", stage: "pedido" }, { status: 500 });
         }
         let token: string;
         try {
           token = await signPortalJwt({ order_id: row.order_id, company_id: order.company_id });
         } catch (e) {
           console.error("[portal-login] signPortalJwt failed:", e instanceof Error ? e.message : e);
-          return Response.json({ error: "server_error" }, { status: 500 });
+          return Response.json({ error: "server_error", stage: "sessao" }, { status: 500 });
         }
         return Response.json({ token, expires_in: 20 * 60 });
       },

@@ -46,7 +46,8 @@ function PortalLoginPage() {
       }
       if (res.status >= 500) {
         // Erro do servidor (ex.: configuração do portal), não é senha errada.
-        setError("O portal está indisponível no momento. Avise o laboratório.");
+        const j = await res.json().catch(() => ({}));
+        setError(`O portal está indisponível no momento. Avise o laboratório${j.stage ? ` (código: ${j.stage})` : ""}.`);
         return;
       }
       if (!res.ok) {

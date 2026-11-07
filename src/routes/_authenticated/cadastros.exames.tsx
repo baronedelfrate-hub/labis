@@ -10,12 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCompanyId } from "@/hooks/useCompanyId";
 import { Plus, Trash2, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { SectorSelect } from "@/components/SectorSelect";
 import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
 import { validateFormula, findFormulaCycle } from "@/lib/formula";
 import { LegacyCatalogPicker, LegacyPricesSection } from "@/components/LegacyExamCatalog";
 
-type Exam = { id: string; code: string; name: string; sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
+type Exam = { id: string; code: string; name: string; sector: string | null; tech_sector: string | null; price_sector: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
 
 export const Route = createFileRoute("/_authenticated/cadastros/exames")({
   head: () => ({ meta: [{ title: "Exames — LIS" }] }),
@@ -31,13 +32,14 @@ function ExamesPage() {
       reopenOnCreate
       orderBy={{ column: "name" }}
       searchColumn="name" searchPlaceholder="Buscar por nome..."
-      emptyValue={{ code: "", name: "", sector: "", material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, is_text: false, samples_count: 1, labels_per_sample: 1, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
+      emptyValue={{ code: "", name: "", sector: "", tech_sector: null, price_sector: null, material: "", deadline_days: 1, fasting_hours: 0, is_urgent_allowed: true, is_text: false, samples_count: 1, labels_per_sample: 1, tiss_codigo_procedimento: "", default_method: "", standard_notes: "" }}
       itemLabel={r => r.name}
       columns={[
         { key: "code", label: "Código", className: "w-24 tabular-nums" },
         { key: "name", label: "Nome" },
         { key: "sector", label: "Setor", className: "w-32" },
         { key: "material", label: "Material", className: "w-32" },
+        { key: "tech_sector", label: "Executa", className: "w-28" },
       ]}
       renderForm={({ value, setValue }) => (
         <>
@@ -48,6 +50,8 @@ function ExamesPage() {
                 code: r.code,
                 name: r.name,
                 material: r.material ?? value.material ?? "",
+                tech_sector: (r.sector ?? "").trim() || value.tech_sector || null,
+                price_sector: (r.price_sector ?? "").trim() || value.price_sector || null,
                 deadline_days: r.days ?? value.deadline_days,
                 fasting_hours: r.fasting_hours ?? value.fasting_hours ?? 0,
                 is_text: r.is_text || (value.is_text ?? false),
@@ -61,6 +65,16 @@ function ExamesPage() {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Setor"><Input value={value.sector ?? ""} onChange={e => setValue({ ...value, sector: e.target.value })} /></Field>
             <Field label="Material"><Input value={value.material ?? ""} onChange={e => setValue({ ...value, material: e.target.value })} /></Field>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Setor técnico (quem executa)">
+              <SectorSelect kind="tecnico" value={value.tech_sector} onChange={v => setValue({ ...value, tech_sector: v })} />
+              <span className="text-[11px] text-muted-foreground">Setor do laboratório ou laboratório de apoio que realiza o exame. Lista do XLAB7.</span>
+            </Field>
+            <Field label="Setor de preço">
+              <SectorSelect kind="preco" value={value.price_sector} onChange={v => setValue({ ...value, price_sector: v })} />
+              <span className="text-[11px] text-muted-foreground">Agrupamento usado para preço e faturamento. Lista do XLAB7.</span>
+            </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Prazo (dias)"><Input type="number" min={0} value={value.deadline_days ?? 1} onChange={e => setValue({ ...value, deadline_days: Number(e.target.value) })} /></Field>

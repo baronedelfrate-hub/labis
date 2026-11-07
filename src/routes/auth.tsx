@@ -10,11 +10,14 @@ import { FlaskConical } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Acesso — LIS" }, { name: "description", content: "Acesso ao sistema laboratorial." }] }),
+  // ?aba=criar abre direto a aba "Criar conta" (usado pelo botão "Criar conta e testar" da página inicial)
+  validateSearch: (s: Record<string, unknown>): { aba?: "criar" } => ({ aba: s.aba === "criar" ? "criar" : undefined }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { aba } = Route.useSearch();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +69,7 @@ function AuthPage() {
             <FlaskConical className="size-5 text-primary" />
             <span className="font-semibold">LabIS</span>
           </div>
-          <Tabs defaultValue="login">
+          <Tabs defaultValue={aba === "criar" ? "signup" : "login"}>
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="login">Entrar</TabsTrigger>
               <TabsTrigger value="signup">Criar conta</TabsTrigger>

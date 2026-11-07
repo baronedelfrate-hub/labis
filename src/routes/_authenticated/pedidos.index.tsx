@@ -10,14 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Search, PackageCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type View = "todos" | "prontos" | "andamento";
+type View = "todos" | "prontos" | "andamento" | "entregues";
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({ meta: [{ title: "Pedidos — LIS" }] }),
   // visao: todos | prontos (finalizados, prontos para entrega) | andamento. data vazia = todas as datas.
   validateSearch: (s: Record<string, unknown>): { visao?: View; data?: string } => ({
-    visao: s.visao === "prontos" || s.visao === "andamento" ? s.visao : undefined,
+    visao: s.visao === "prontos" || s.visao === "andamento" || s.visao === "entregues" ? s.visao : undefined,
     data: typeof s.data === "string" && /^(\d{4}-\d{2}-\d{2}|todas)$/.test(s.data) ? s.data : undefined,
   }),
   component: Orders,
@@ -42,6 +42,7 @@ const views: { key: View; label: string }[] = [
   { key: "todos", label: "Todos" },
   { key: "prontos", label: "Prontos para entrega" },
   { key: "andamento", label: "Em andamento" },
+  { key: "entregues", label: "Entregues" },
 ];
 
 function Orders() {
@@ -49,12 +50,12 @@ function Orders() {
   const sp = Route.useSearch();
   const view: View = sp.visao ?? "todos";
   // Prontos para entrega vale para qualquer dia: sem data escolhida, mostra todas.
-  const date = sp.data === "todas" ? "" : (sp.data ?? (view === "prontos" ? "" : today()));
+  const date = sp.data === "todas" ? "" : (sp.data ?? (view === "prontos" || view === "entregues" ? "" : today()));
   const [search, setSearch] = useState("");
   const [term, setTerm] = useState("");
   useEffect(() => { const t = setTimeout(() => setTerm(search.trim()), 300); return () => clearTimeout(t); }, [search]);
 
-  const setView = (v: View) => navigate({ to: "/pedidos", search: { visao: v === "todos" ? undefined : v, data: v === "prontos" ? "todas" : today() }, replace: true });
+  const setView = (v: View) => navigate({ to: "/pedidos", search: { visao: v === "todos" ? undefined : v, data: v === "prontos" || v === "entregues" ? "todas" : today() }, replace: true });
   const setDate = (d: string) => navigate({ to: "/pedidos", search: { visao: sp.visao, data: d || "todas" }, replace: true });
   // Buscar por nome ou número ignora a data, para achar paciente de outro dia.
   const searching = term.length > 0;
@@ -64,11 +65,12 @@ function Orders() {
     queryFn: async () => {
       let q = supabase
         .from("orders")
-        .select("id, order_number, order_date, status, is_urgent, total_value, payment_status, patient:patients!inner(id,name,code)")
+        .select("id, order_number, order_date, status, is_urgent, total_value, payment_status, delivered_at, patient:patients!inner(id,name,code)")
         .order("order_date", { ascending: false })
         .order("order_number", { ascending: false })
         .limit(LIMIT);
-      if (view === "prontos") q = q.eq("status", "finalizado");
+      if (view === "prontos") q = q.eq("status", "finalizado").is("delivered_at", null);
+      else if (view === "entregues") q = q.not("delivered_at", "is", null);
       else if (view === "andamento") q = q.in("status", ["aberto", "coletado", "em_analise"]);
       if (searching) {
         if (/^\d+$/.test(term)) q = q.eq("order_number", Number(term));
@@ -85,7 +87,7 @@ function Orders() {
 
   return (
     <>
-      <PageHeader title="Pedidos" description={view === "prontos" ? "Pedidos com todos os exames liberados, prontos para o laudo" : "Pedidos do laboratório"} actions={
+      <PageHeader title="Pedidos" description={view === "prontos" ? "Pedidos com todos os exames liberados, aguardando entrega ao paciente" : view === "entregues" ? "Pedidos cujo laudo já foi entregue" : "Pedidos do laboratório"} actions={
         <Button asChild><Link to="/pedidos/novo"><Plus className="size-4 mr-1" />Novo pedido</Link></Button>
       } />
       <PageBody>
@@ -122,7 +124,7 @@ function Orders() {
             </TableHeader>
             <TableBody>
               {isLoading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>}
-              {!isLoading && rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{view === "prontos" ? "Nenhum pedido pronto para entrega." : "Nenhum pedido encontrado."}</TableCell></TableRow>}
+              {!isLoading && rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{view === "prontos" ? "Nenhum pedido pronto para entrega." : view === "entregues" ? "Nenhum pedido entregue." : "Nenhum pedido encontrado."}</TableCell></TableRow>}
               {rows.map(o => {
                 const p = o.patient as { name: string; code: string } | null;
                 return (
@@ -130,7 +132,7 @@ function Orders() {
                     <TableCell className="font-medium tabular-nums">#{o.order_number}</TableCell>
                     <TableCell className="tabular-nums text-muted-foreground">{String(o.order_date).split("-").reverse().join("/")}</TableCell>
                     <TableCell>{p?.name} <span className="text-muted-foreground text-xs">({p?.code})</span></TableCell>
-                    <TableCell><Badge variant="outline" className={cn(statusStyle[o.status])}>{statusLabel[o.status] ?? o.status}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={cn(statusStyle[o.status])}>{o.status === "finalizado" && o.delivered_at ? "Entregue" : (statusLabel[o.status] ?? o.status)}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className={cn(payStyle[o.payment_status])}>{payLabel[o.payment_status] ?? o.payment_status}</Badge></TableCell>
                     <TableCell>{o.is_urgent && <Badge className="bg-warning text-warning-foreground">Urgente</Badge>}</TableCell>
                     <TableCell className="text-right tabular-nums">R$ {Number(o.total_value).toFixed(2)}</TableCell>

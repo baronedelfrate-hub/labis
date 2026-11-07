@@ -781,6 +781,9 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          delivered_at: string | null
+          delivered_by: string | null
+          delivered_to: string | null
           delivery_date: string | null
           doctor_id: string | null
           id: string
@@ -803,6 +806,9 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
+          delivered_to?: string | null
           delivery_date?: string | null
           doctor_id?: string | null
           id?: string
@@ -825,6 +831,9 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          delivered_by?: string | null
+          delivered_to?: string | null
           delivery_date?: string | null
           doctor_id?: string | null
           id?: string

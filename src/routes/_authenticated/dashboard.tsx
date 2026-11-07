@@ -26,7 +26,7 @@ function Dashboard() {
   const { data: prontos } = useQuery({
     queryKey: ["dashboard-prontos"],
     queryFn: async () => {
-      const { count, error } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "finalizado");
+      const { count, error } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "finalizado").is("delivered_at", null);
       if (error) throw error;
       return count ?? 0;
     },
@@ -53,7 +53,7 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon: Icon, label, value, tone, to }: { icon: LucideIcon; label: string; value: number; tone: "primary" | "info" | "success" | "warning"; to?: { visao?: "prontos" | "andamento"; data?: string } }) {
+function Stat({ icon: Icon, label, value, tone, to }: { icon: LucideIcon; label: string; value: number; tone: "primary" | "info" | "success" | "warning"; to?: { visao?: "prontos" | "andamento" | "entregues"; data?: string } }) {
   const toneClass = {
     primary: "bg-primary/10 text-primary",
     info: "bg-info/10 text-info",

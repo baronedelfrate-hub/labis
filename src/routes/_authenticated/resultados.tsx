@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/resultados")({
 });
 
 const ITEM_SELECT =
-  "id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)";
+  "id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples!order_items_sample_id_fkey(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)";
 
 const isShipped = (r: any) => (Array.isArray(r.support_shipment_items) ? r.support_shipment_items.length > 0 : !!r.support_shipment_items);
 const sampleStatuses = (r: any): (string | undefined)[] => (r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status]);

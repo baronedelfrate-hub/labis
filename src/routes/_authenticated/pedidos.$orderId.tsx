@@ -96,7 +96,7 @@ function OrderDetail() {
       const { data: items } = await supabase
         .from("order_items")
         .select(
-          "id,status,price,exam:exams(code,name,material,sector),sample:samples(id,sample_number,material,status)",
+          "id,status,price,exam:exams(code,name,material,sector),sample:samples!order_items_sample_id_fkey(id,sample_number,material,status)",
         )
         .eq("order_id", orderId);
       const itemIds = (items ?? []).map((i) => i.id);

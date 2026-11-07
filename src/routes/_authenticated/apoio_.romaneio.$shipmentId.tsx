@@ -37,7 +37,7 @@ function ManifestPage() {
     queryKey: ["support-manifest", shipmentId],
     queryFn: async () => {
       const { data, error } = await supabase.from("support_shipments")
-        .select("id, number, sent_at, notes, support_lab:support_labs(name, contact, phone), support_shipment_items(id, order_item:order_items(order:orders(order_number, patient:patients(name, code, birth_date)), exam:exams(code, name, material), sample:samples(sample_number, material)))")
+        .select("id, number, sent_at, notes, support_lab:support_labs(name, contact, phone), support_shipment_items(id, order_item:order_items(order:orders(order_number, patient:patients(name, code, birth_date)), exam:exams(code, name, material), sample:samples!order_items_sample_id_fkey(sample_number, material)))")
         .eq("id", shipmentId).maybeSingle();
       if (error) throw error;
       return data as unknown as {

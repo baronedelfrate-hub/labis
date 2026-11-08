@@ -173,6 +173,26 @@ function ResultadosPage() {
     );
   const filtered = (data as any[]).filter((r) => (sector === "__all__" || r.exam?.sector === sector) && matches(r));
 
+  // Motivo da devolução (Liberação), numa consulta só para os exames da tela. Se falhar, os cartões seguem normais.
+  const visibleIds = filtered.slice(0, 150).map((r) => r.id as string);
+  const { data: returnsByItem } = useQuery({
+    queryKey: ["result-return", visibleIds.join(",")],
+    enabled: canEnterResults && visibleIds.length > 0,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("result_corrections")
+        .select("order_item_id, reason, returned_at")
+        .in("order_item_id", visibleIds)
+        .order("returned_at", { ascending: false });
+      const m = new Map<string, { reason: string; returned_at: string }>();
+      for (const r of (data ?? []) as { order_item_id: string; reason: string; returned_at: string }[]) {
+        if (!m.has(r.order_item_id)) m.set(r.order_item_id, { reason: r.reason, returned_at: r.returned_at });
+      }
+      return m;
+    },
+  });
+
   if (!canEnterResults) {
     return (
       <PageBody>
@@ -255,6 +275,7 @@ function ResultadosPage() {
               key={r.id}
               item={r}
               warning={widened ? entryWarning(r) : null}
+              lastReturn={returnsByItem?.get(r.id) ?? null}
               companyId={companyId}
               parameters={(parametersByExam as Map<string, any[]>).get(r.exam_id) ?? []}
               rangesByExam={(rangesGrouped as any).byExam as Map<string, ReferenceRange[]>}
@@ -294,9 +315,9 @@ function FlagNote({ flag }: { flag: ResultFlag }) {
 }
 
 function ResultItemCard({
-  item, warning, companyId, parameters, rangesByExam, rangesByParam, onSaved,
+  item, warning, lastReturn, companyId, parameters, rangesByExam, rangesByParam, onSaved,
 }: {
-  item: any; warning?: string | null; companyId: string | null; parameters: any[];
+  item: any; warning?: string | null; lastReturn?: { reason: string; returned_at: string } | null; companyId: string | null; parameters: any[];
   rangesByExam: Map<string, ReferenceRange[]>; rangesByParam: Map<string, ReferenceRange[]>;
   onSaved: () => void;
 }) {
@@ -493,6 +514,12 @@ function ResultItemCard({
         </div>
       </div>
 
+      {lastReturn && (
+        <div role="note" className="flex items-start gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-900">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+          <span><b>Devolvido para correção</b> em {new Date(lastReturn.returned_at).toLocaleDateString("pt-BR")}: {lastReturn.reason}</span>
+        </div>
+      )}
       {warning && (
         <div role="note" className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />{warning}

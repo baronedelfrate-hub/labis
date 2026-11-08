@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPortalAccessInfo } from "@/lib/portal.functions";
 import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
 import { TextExamBlock } from "@/components/TextExamBlock";
+import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/laudo")({
   ssr: false,
@@ -19,13 +20,14 @@ function LaudoPage() {
   const { orderId } = Route.useParams();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const fetchPortalInfo = useServerFn(getPortalAccessInfo);
+  const { data: branding } = useCompanyBranding();
 
   const { data: portal } = useQuery({
     queryKey: ["laudo-portal", orderId],
     queryFn: () => fetchPortalInfo({ data: { orderId } }),
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error: loadError, refetch: reload } = useQuery({
     queryKey: ["laudo", orderId],
     staleTime: 0,
     gcTime: 0,
@@ -94,6 +96,21 @@ function LaudoPage() {
     return () => { cancelled = true; };
   }, [data?.settings?.logo_url]);
 
+  if (loadError) {
+    return (
+      <div className="p-6">
+        <div role="alert" className="max-w-xl rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
+          <div className="font-medium">Não foi possível carregar o laudo.</div>
+          <div className="mt-1 break-words text-xs">{String((loadError as Error)?.message ?? "Erro desconhecido")}</div>
+          <div className="mt-1 text-xs">Se o erro continuar, envie este texto ao suporte.</div>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => reload()}>Tentar de novo</Button>
+            <Button size="sm" variant="ghost" asChild><Link to="/pedidos/$orderId" params={{ orderId }}>Voltar ao pedido</Link></Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (isLoading || !data) return <div className="p-6 text-muted-foreground">Carregando...</div>;
 
   const normalizedStatus = String((data.order as any)?.status ?? "").trim().toLowerCase();
@@ -123,6 +140,21 @@ function LaudoPage() {
   const textItems = releasedItems.filter(isTextItem);
   const simpleItems = releasedItems.filter(i => !isTextItem(i) && !(valuesByResult.get(resultByItem.get(i.id).id)?.length));
   const composedItems = releasedItems.filter(i => (valuesByResult.get(resultByItem.get(i.id).id)?.length ?? 0) > 0);
+  // Quem liberou (revisão) e exames feitos por laboratório de apoio, para o rodapé e as notas
+  const reviewers = Array.from(
+    new Map(
+      (data.results as any[]).map((r) => r.reviewer).filter((p: any) => p?.full_name).map((p: any) => [p.full_name, p] as const),
+    ).values(),
+  ) as { full_name: string; professional_council?: string | null; professional_registration?: string | null }[];
+  const reviewerText = (p: (typeof reviewers)[number]) => `${p.full_name}${p.professional_council ? ` — ${p.professional_council} ${p.professional_registration ?? ""}`.trimEnd() : ""}`;
+  const apoioByLab = new Map<string, string[]>();
+  for (const i of [...simpleItems, ...textItems]) {
+    const lab = (i as any).exam?.support_lab?.name;
+    if (lab) apoioByLab.set(lab, [...(apoioByLab.get(lab) ?? []), (i as any).exam?.code]);
+  }
+  const labName = s.legal_name || branding?.name || "—";
+  const portalBase = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
+  const portalLink = branding?.slug ? `${portalBase}?lab=${branding.slug}` : portalBase;
   const releasedAt = data.results.length
     ? new Date(Math.max(...data.results.map((r: any) => new Date(r.released_at).getTime())))
     : new Date();
@@ -141,6 +173,9 @@ function LaudoPage() {
         .laudo-sheet table { border-collapse: collapse; width: 100%; }
         .laudo-sheet th, .laudo-sheet td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 12px; vertical-align: top; }
         .laudo-sheet th { font-weight: 600; background: #f8fafc; }
+        .laudo-sheet thead { display: table-header-group; }
+        .laudo-sheet tr { break-inside: avoid; page-break-inside: avoid; }
+        .laudo-sheet footer { break-inside: avoid; page-break-inside: avoid; }
       `}</style>
       <div className="laudo-toolbar sticky top-0 z-10 border-b bg-background/95 backdrop-blur px-6 py-3 flex items-center gap-2">
         <Button variant="outline" size="sm" asChild><Link to="/pedidos/$orderId" params={{ orderId }}><ArrowLeft className="size-4 mr-1" />Voltar</Link></Button>
@@ -152,7 +187,7 @@ function LaudoPage() {
         <header className="flex items-start gap-4 border-b pb-4">
           {logoUrl && <img src={logoUrl} alt="Logo" className="max-h-20 max-w-[140px] object-contain" />}
           <div className="flex-1">
-            <div className="text-lg font-semibold">{s.legal_name || "—"}</div>
+            <div className="text-lg font-semibold">{labName}</div>
             <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
               {s.address && <div>{s.address}{s.city ? ` — ${s.city}` : ""}{s.state ? `/${s.state}` : ""}{s.zip_code ? ` — CEP ${s.zip_code}` : ""}</div>}
               <div>{s.phone && <span>Tel: {s.phone}</span>}{s.phone && s.email && " · "}{s.email && <span>{s.email}</span>}</div>
@@ -215,6 +250,14 @@ function LaudoPage() {
           </section>
         )}
 
+        {apoioByLab.size > 0 && (
+          <section className="mt-2 text-xs text-muted-foreground">
+            {Array.from(apoioByLab.entries()).map(([lab, codes]) => (
+              <div key={lab}>Exame(s) realizado(s) pelo laboratório de apoio <span className="font-medium text-foreground">{lab}</span>: {codes.join(", ")}.</div>
+            ))}
+          </section>
+        )}
+
         {textItems.map((i: any) => (
           <TextExamBlock key={i.id} item={i} result={resultByItem.get(i.id)} collectionDate={o.collection_date} />
         ))}
@@ -237,7 +280,7 @@ function LaudoPage() {
             <div className="font-medium">Acesso digital ao laudo</div>
             <div className="text-muted-foreground mt-1">
               Consulte este laudo online em{" "}
-              <span className="font-mono">{typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal"}</span>
+              <span className="font-mono">{portalLink}</span>
               {" "}informando o código{" "}
               <span className="font-mono font-semibold tracking-widest">{portal.public_code}</span>.
               A senha de 6 dígitos é entregue separadamente pelo laboratório.
@@ -253,9 +296,12 @@ function LaudoPage() {
             </div>
             <div className="text-center min-w-[240px]">
               <div className="border-t pt-1">
-                <div className="font-medium">{s.responsible_tech_name || "—"}</div>
-                <div className="text-muted-foreground">{s.responsible_tech_council || ""}</div>
+                <div className="font-medium">{s.responsible_tech_name || reviewers[0]?.full_name || "—"}</div>
+                <div className="text-muted-foreground">{s.responsible_tech_name ? (s.responsible_tech_council || "") : (reviewers[0] ? `${reviewers[0].professional_council ?? ""} ${reviewers[0].professional_registration ?? ""}`.trim() : "")}</div>
               </div>
+              {reviewers.length > 0 && (
+                <div className="mt-1 text-[11px] text-muted-foreground">Liberado por: {reviewers.map(reviewerText).join("; ")}</div>
+              )}
             </div>
           </div>
         </footer>

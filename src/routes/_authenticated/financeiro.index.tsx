@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/financeiro/")({
-  head: () => ({ meta: [{ title: "Financeiro — LIS" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — DFLAB" }] }),
   component: FinanceiroDashboard,
 });
 

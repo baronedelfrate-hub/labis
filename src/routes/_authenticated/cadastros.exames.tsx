@@ -19,7 +19,7 @@ import { LegacyCatalogPicker, LegacyPricesSection } from "@/components/LegacyExa
 type Exam = { id: string; code: string; name: string; sector: string | null; tech_sector: string | null; price_sector: string | null; support_lab_id: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
 
 export const Route = createFileRoute("/_authenticated/cadastros/exames")({
-  head: () => ({ meta: [{ title: "Exames — LIS" }] }),
+  head: () => ({ meta: [{ title: "Exames — DFLAB" }] }),
   component: ExamesPage,
 });
 

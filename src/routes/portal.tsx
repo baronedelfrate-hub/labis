@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setPortalToken } from "@/lib/portal-session";
+import { BRAND } from "@/lib/brand";
 import { FlaskConical, KeyRound, Lock, FileText, ShieldCheck, Clock, HelpCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 // Mantém só letras e números (sem I/O/0/1 confundíveis não é garantido aqui) e coloca o traço depois de 4 caracteres.
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/portal")({
   }),
   head: () => ({
     meta: [
-      { title: "Portal do paciente — LIS" },
+      { title: "Portal do paciente — DFLAB" },
       { name: "description", content: "Acesse seu laudo com código e senha fornecidos pelo laboratório." },
       { name: "robots", content: "noindex" },
     ],
@@ -113,7 +114,7 @@ function PortalLoginPage() {
           <>
             <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-5" /></span>
             <div className="leading-tight">
-              <div className="font-semibold">LabIS</div>
+              <div className="font-semibold">{BRAND}</div>
               <div className="text-xs text-muted-foreground">Portal do paciente</div>
             </div>
           </>
@@ -206,7 +207,7 @@ function PortalLoginPage() {
         </section>
       </main>
 
-      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">{brand ? "Tecnologia LabIS" : "Portal do paciente · LabIS"}</footer>
+      <footer className="px-4 pb-6 text-center text-xs text-muted-foreground">{brand ? `Tecnologia ${BRAND}` : `Portal do paciente · ${BRAND}`}</footer>
     </div>
   );
 }

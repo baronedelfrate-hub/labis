@@ -15,7 +15,7 @@ import { SampleHistory } from "@/components/SampleHistory";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/coleta")({
-  head: () => ({ meta: [{ title: "Coleta — LIS" }] }),
+  head: () => ({ meta: [{ title: "Coleta — DFLAB" }] }),
   component: ColetaPage,
 });
 

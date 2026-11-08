@@ -1,6 +1,6 @@
 {
-  "name": "LabIS — Sistema de Gestão Laboratorial",
-  "short_name": "LabIS",
+  "name": "DFLAB — Sistema de Gestão Laboratorial",
+  "short_name": "DFLAB",
   "description": "Sistema de gestão para laboratório de análises clínicas: pedidos, coleta, resultados e financeiro.",
   "lang": "pt-BR",
   "dir": "ltr",

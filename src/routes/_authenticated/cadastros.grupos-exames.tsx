@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useCompanyId } from "@/hooks/useCompanyId";
 
 export const Route = createFileRoute("/_authenticated/cadastros/grupos-exames")({
-  head: () => ({ meta: [{ title: "Grupos de exames — LIS" }] }),
+  head: () => ({ meta: [{ title: "Grupos de exames — DFLAB" }] }),
   component: GroupsPage,
 });
 

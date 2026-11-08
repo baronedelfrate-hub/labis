@@ -10,7 +10,7 @@ import { buildLabels, sectorCodeFor, sectorLine, type LabelData } from "@/lib/sa
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/etiquetas")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Etiquetas — LIS" }] }),
+  head: () => ({ meta: [{ title: "Etiquetas — DFLAB" }] }),
   component: EtiquetasPage,
 });
 

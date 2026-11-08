@@ -19,7 +19,7 @@ import { toast } from "sonner";
 type Tab = "enviar" | "retorno" | "enviadas";
 
 export const Route = createFileRoute("/_authenticated/apoio")({
-  head: () => ({ meta: [{ title: "Envio ao apoio — LIS" }] }),
+  head: () => ({ meta: [{ title: "Envio ao apoio — DFLAB" }] }),
   validateSearch: (s: Record<string, unknown>): { aba?: Tab } => ({
     aba: s.aba === "retorno" || s.aba === "enviadas" ? s.aba : undefined,
   }),

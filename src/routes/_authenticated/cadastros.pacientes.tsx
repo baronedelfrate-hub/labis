@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 type Patient = { id: string; code: string; name: string; birth_date: string | null; sex: "M" | "F" | "O" | null; cpf: string | null; phone: string | null; email: string | null };
 
 export const Route = createFileRoute("/_authenticated/cadastros/pacientes")({
-  head: () => ({ meta: [{ title: "Pacientes — LIS" }] }),
+  head: () => ({ meta: [{ title: "Pacientes — DFLAB" }] }),
   component: () => (
     <CrudPage<Patient>
       title="Pacientes" description="Cadastro de pacientes" table="patients"

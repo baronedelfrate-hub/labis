@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/resultados")({
-  head: () => ({ meta: [{ title: "Resultados — LIS" }] }),
+  head: () => ({ meta: [{ title: "Resultados — DFLAB" }] }),
   // ?item=<exame do pedido> ou ?pedido=<pedido>: mostra só esse exame/pedido, mesmo antes de a amostra ser recebida
   validateSearch: (s: Record<string, unknown>): { item?: string; pedido?: string } => {
     const uuid = (v: unknown) => (typeof v === "string" && /^[0-9a-f-]{32,36}$/i.test(v) ? v : undefined);

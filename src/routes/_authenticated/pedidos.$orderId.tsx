@@ -27,7 +27,7 @@ import { useMyRoles } from "@/hooks/useMyRoles";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
-  head: () => ({ meta: [{ title: "Pedido — LIS" }] }),
+  head: () => ({ meta: [{ title: "Pedido — DFLAB" }] }),
   component: OrderDetail,
 });
 

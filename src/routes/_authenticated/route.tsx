@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useMyRoles } from "@/hooks/useMyRoles";
+import { BRAND } from "@/lib/brand";
 import { useSupportSummary } from "@/hooks/useSupportReturns";
 import { HelpButton } from "@/components/HelpButton";
 
@@ -82,7 +83,7 @@ function AuthedLayout() {
       <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex items-center gap-2 border-b border-sidebar-border">
           <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
-          <span className="font-semibold">LabIS</span>
+          <span className="font-semibold">{BRAND}</span>
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1 text-sm">
           {nav.map(item => (
@@ -187,7 +188,7 @@ function AuthedLayout() {
             <Menu className="size-5" />
           </Button>
           <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
-          <span className="font-semibold">LabIS</span>
+          <span className="font-semibold">{BRAND}</span>
         </header>
         <main className="flex-1 min-w-0 overflow-x-hidden pb-20 print:pb-0">
           <Outlet />

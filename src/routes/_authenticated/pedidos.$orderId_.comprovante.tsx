@@ -9,7 +9,7 @@ import { getPortalAccessInfo } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/comprovante")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Comprovante — LIS" }] }),
+  head: () => ({ meta: [{ title: "Comprovante — DFLAB" }] }),
   component: ComprovantePage,
 });
 

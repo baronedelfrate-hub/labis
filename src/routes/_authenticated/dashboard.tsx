@@ -8,7 +8,7 @@ import { useSupportSummary } from "@/hooks/useSupportReturns";
 import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — LIS" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — DFLAB" }] }),
   component: Dashboard,
 });
 

@@ -1,4 +1,4 @@
-/* Service worker do LabIS.
+/* Service worker do DFLAB.
  *
  * Objetivo: permitir instalar o app na tela do celular e abrir mais rápido, SEM nunca prender o
  * usuário numa versão antiga do sistema.
@@ -9,7 +9,7 @@
  * - Por segurança NÃO guarda dados de pacientes: nada de páginas, chamadas ao Supabase, /api/ ou
  *   funções do servidor (/_serverFn/...).
  */
-const VERSION = "labis-v2"; // mudou o nome: o navegador apaga os guardados da versão anterior
+const VERSION = "dflab-v1"; // mudou o nome: o navegador apaga os guardados da versão anterior
 const STATIC_CACHE = `${VERSION}-static`;
 const OFFLINE_URL = "/offline.html";
 const PRECACHE = [OFFLINE_URL, "/icon-192.png", "/icon-512.png"];

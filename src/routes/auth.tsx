@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FlaskConical } from "lucide-react";
+import { BRAND } from "@/lib/brand";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Acesso — LIS" }, { name: "description", content: "Acesso ao sistema laboratorial." }] }),
+  head: () => ({ meta: [{ title: "Acesso — DFLAB" }, { name: "description", content: "Acesso ao sistema laboratorial." }] }),
   // ?aba=criar abre direto a aba "Criar conta" (usado pelo botão "Criar conta e testar" da página inicial)
   validateSearch: (s: Record<string, unknown>): { aba?: "criar" } => ({ aba: s.aba === "criar" ? "criar" : undefined }),
   component: AuthPage,
@@ -55,19 +56,19 @@ function AuthPage() {
       <div className="hidden lg:flex flex-col justify-between bg-sidebar text-sidebar-foreground p-12">
         <div className="flex items-center gap-3">
           <div className="rounded-md bg-sidebar-primary p-2"><FlaskConical className="size-5" /></div>
-          <span className="font-semibold text-lg">LabIS</span>
+          <span className="font-semibold text-lg">{BRAND}</span>
         </div>
         <div className="space-y-3">
           <h1 className="text-3xl font-semibold leading-tight">Sistema de informação para laboratórios de análises clínicas</h1>
           <p className="text-sm text-sidebar-foreground/70 max-w-md">Gestão de pedidos, coletas, convênios e catálogo de exames — tudo em um só lugar.</p>
         </div>
-        <p className="text-xs text-sidebar-foreground/50">© {new Date().getFullYear()} LabIS</p>
+        <p className="text-xs text-sidebar-foreground/50">© {new Date().getFullYear()} {BRAND}</p>
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8 flex items-center gap-2">
             <FlaskConical className="size-5 text-primary" />
-            <span className="font-semibold">LabIS</span>
+            <span className="font-semibold">{BRAND}</span>
           </div>
           <Tabs defaultValue={aba === "criar" ? "signup" : "login"}>
             <TabsList className="grid grid-cols-2 w-full">

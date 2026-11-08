@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 type Unit = { id: string; code: string; name: string; address: string | null; phone: string | null };
 
 export const Route = createFileRoute("/_authenticated/cadastros/unidades")({
-  head: () => ({ meta: [{ title: "Unidades — LIS" }] }),
+  head: () => ({ meta: [{ title: "Unidades — DFLAB" }] }),
   component: () => (
     <CrudPage<Unit>
       title="Unidades" description="Unidades de atendimento" table="units"

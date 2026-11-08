@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BRAND, LOGIN_BG } from "@/lib/brand";
-import { LogoMark, LogoWordmark } from "@/components/Logo";
+import { LogoFull } from "@/components/Logo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Acesso — DFLAB" }, { name: "description", content: "Acesso ao sistema laboratorial." }] }),
@@ -57,8 +57,7 @@ function AuthPage() {
         <img src={LOGIN_BG} alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full object-cover object-right-bottom" />
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-br from-[#04232c]/95 via-[#04232c]/45 to-transparent" />
         <div className="flex items-center gap-3">
-          <LogoMark size={40} />
-          <LogoWordmark onDark className="text-2xl" />
+          <LogoFull dark height={60} />
         </div>
         <div className="mt-14 max-w-md space-y-3">
           <h1 className="text-3xl font-semibold leading-tight">Sistema de informação para laboratórios de análises clínicas</h1>
@@ -69,8 +68,7 @@ function AuthPage() {
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-8 flex items-center gap-2">
-            <LogoMark size={32} />
-            <LogoWordmark className="text-xl" />
+            <LogoFull height={48} />
           </div>
           <Tabs defaultValue={aba === "criar" ? "signup" : "login"}>
             <TabsList className="grid grid-cols-2 w-full">

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
-import { LogoMark, LogoWordmark } from "@/components/Logo";
+import { LogoFull } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -105,9 +105,8 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <a href="#topo" className="flex items-center gap-2 font-semibold">
-            <LogoMark size={32} />
-            <LogoWordmark className="text-lg" />
+          <a href="#topo" aria-label={BRAND} className="flex items-center">
+            <LogoFull height={44} />
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#recursos" className="hover:text-foreground">Recursos</a>

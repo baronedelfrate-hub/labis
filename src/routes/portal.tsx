@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setPortalToken } from "@/lib/portal-session";
 import { BRAND } from "@/lib/brand";
-import { LogoMark, LogoWordmark } from "@/components/Logo";
+import { LogoFull } from "@/components/Logo";
 import { KeyRound, Lock, FileText, ShieldCheck, Clock, HelpCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 // Mantém só letras e números (sem I/O/0/1 confundíveis não é garantido aqui) e coloca o traço depois de 4 caracteres.
@@ -113,11 +113,8 @@ function PortalLoginPage() {
           </>
         ) : (
           <>
-            <LogoMark size={36} />
-            <div className="leading-tight">
-              <LogoWordmark className="block text-base" />
-              <div className="text-xs text-muted-foreground">Portal do paciente</div>
-            </div>
+            <LogoFull height={44} />
+            <div className="border-l pl-3 text-xs leading-tight text-muted-foreground">Portal do<br />paciente</div>
           </>
         )}
       </header>

@@ -64,7 +64,13 @@ export const Route = createFileRoute("/api/public/portal-laudo")({
           logoUrl = signed?.signedUrl ?? null;
         }
 
-        return Response.json({ order, items: items ?? [], results: results ?? [], resultValues: resultValues ?? [], settings, logoUrl });
+        const { data: company } = await supabaseAdmin
+          .from("companies")
+          .select("name")
+          .eq("id", (order as { company_id: string }).company_id)
+          .maybeSingle();
+
+        return Response.json({ order, items: items ?? [], results: results ?? [], resultValues: resultValues ?? [], settings, logoUrl, companyName: (company as { name?: string } | null)?.name ?? null });
       },
     },
   },

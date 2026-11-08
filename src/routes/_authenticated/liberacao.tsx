@@ -5,9 +5,11 @@ import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useMyRoles } from "@/hooks/useMyRoles";
-import { ShieldAlert, CheckCheck, AlertTriangle } from "lucide-react";
+import { ShieldAlert, CheckCheck, AlertTriangle, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { getFlag, isPanic, flagLabel, type ResultFlag } from "@/lib/result-flags";
 import { cn } from "@/lib/utils";
@@ -37,12 +39,14 @@ function LiberacaoPage() {
   const { canRelease } = useMyRoles();
   const [reviewerByOrder, setReviewerByOrder] = useState<Record<string, string>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [returning, setReturning] = useState<{ id: string; label: string } | null>(null);
+  const [returnReason, setReturnReason] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
   }, []);
 
-  const { data = [] } = useQuery({
+  const { data = [], error: loadError, refetch: reload, isLoading } = useQuery({
     queryKey: ["pending-release"],
     enabled: canRelease,
     queryFn: async () => {
@@ -103,6 +107,35 @@ function LiberacaoPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const giveBack = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { error } = await supabase.rpc("return_result_for_correction", { _result_id: id, _reason: reason });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setReturning(null);
+      setReturnReason("");
+      qc.invalidateQueries({ queryKey: ["pending-release"] });
+      qc.invalidateQueries({ queryKey: ["pending-results"] });
+      qc.invalidateQueries({ queryKey: ["result-scope"] });
+      qc.invalidateQueries({ queryKey: ["result-all"] });
+      qc.invalidateQueries({ queryKey: ["result-return"] });
+      qc.invalidateQueries({ queryKey: ["order"] });
+      toast.success("Resultado devolvido para correção. O exame voltou para a fila de Resultados.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // Liberar valor de pânico exige confirmação
+  const panicIn = (r: any) => {
+    const flags: ResultFlag[] = (r.values ?? []).length
+      ? (r.values as any[]).map((v) => getFlag(v.value, flagLimits(v)))
+      : [getFlag(r.value, flagLimits(r))];
+    return flags.filter(isPanic).length;
+  };
+  const confirmPanic = (n: number) =>
+    n === 0 || window.confirm(`Há ${n} valor(es) de PÂNICO neste resultado. Confirma a liberação?`);
+
   if (!canRelease) {
     return (
       <PageBody>
@@ -117,7 +150,19 @@ function LiberacaoPage() {
     <>
       <PageHeader title="Liberação de resultados" description="Resultados lançados aguardando liberação" />
       <PageBody>
-        {grouped.length === 0 && <div className="text-muted-foreground text-sm">Nenhum resultado aguardando liberação.</div>}
+        {loadError && (
+          <div role="alert" className="mb-3 flex flex-wrap items-start gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Não foi possível carregar os resultados.</div>
+              <div className="break-words text-xs">{String((loadError as Error)?.message ?? "Erro desconhecido")}</div>
+              <div className="mt-1 text-xs">Se o erro continuar, envie este texto ao suporte.</div>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => reload()}>Tentar de novo</Button>
+          </div>
+        )}
+        {isLoading && <div className="text-muted-foreground text-sm">Carregando...</div>}
+        {grouped.length === 0 && !isLoading && !loadError && <div className="text-muted-foreground text-sm">Nenhum resultado aguardando liberação.</div>}
         <div className="space-y-3">
           {grouped.map((g) => {
             const reviewer = reviewerByOrder[g.orderId] ?? currentUserId ?? "";
@@ -144,7 +189,7 @@ function LiberacaoPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" onClick={() => release.mutate({ ids: g.rows.map((r) => r.id), reviewer: reviewer || null })} disabled={release.isPending}>
+                    <Button size="sm" onClick={() => { if (confirmPanic(g.panicCount)) release.mutate({ ids: g.rows.map((r) => r.id), reviewer: reviewer || null }); }} disabled={release.isPending}>
                       <CheckCheck className="size-4 mr-1" />Liberar pedido
                     </Button>
                   </div>
@@ -191,7 +236,10 @@ function LiberacaoPage() {
                           )}
                           {r.observation && <div className="text-xs text-muted-foreground mt-1">{r.observation}</div>}
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => release.mutate({ ids: [r.id], reviewer: reviewer || null })} disabled={release.isPending}>Liberar</Button>
+                        <div className="flex gap-2 sm:flex-col">
+                          <Button size="sm" variant="outline" onClick={() => { if (confirmPanic(panicIn(r))) release.mutate({ ids: [r.id], reviewer: reviewer || null }); }} disabled={release.isPending}>Liberar</Button>
+                          <Button size="sm" variant="ghost" className="text-red-700 hover:text-red-800" onClick={() => { setReturnReason(""); setReturning({ id: r.id, label: `${ex?.code ?? ""} ${ex?.name ?? ""} (#${g.order_number})` }); }}><Undo2 className="mr-1 size-4" />Devolver</Button>
+                        </div>
                       </div>
                     );
                   })}
@@ -201,6 +249,27 @@ function LiberacaoPage() {
           })}
         </div>
       </PageBody>
+
+      <Dialog open={!!returning} onOpenChange={(o) => { if (!o) { setReturning(null); setReturnReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Devolver para correção</DialogTitle>
+            <DialogDescription>
+              {returning?.label}. O resultado lançado é removido e o exame volta para a fila de Resultados, para ser digitado de novo. O motivo e o valor devolvido ficam registrados.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-1.5">
+            <label className="text-sm font-medium" htmlFor="motivo">Motivo (obrigatório)</label>
+            <Textarea id="motivo" rows={3} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} placeholder="Ex.: valor digitado errado, conferir a unidade" />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setReturning(null); setReturnReason(""); }}>Cancelar</Button>
+            <Button variant="destructive" disabled={returnReason.trim().length < 3 || giveBack.isPending} onClick={() => returning && giveBack.mutate({ id: returning.id, reason: returnReason.trim() })}>
+              {giveBack.isPending ? "Devolvendo..." : "Devolver para correção"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

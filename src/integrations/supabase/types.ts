@@ -1822,6 +1822,36 @@ export type Database = {
         }
         Relationships: []
       }
+      result_corrections: {
+        Row: {
+          company_id: string
+          id: string
+          order_item_id: string
+          reason: string
+          returned_at: string
+          returned_by: string | null
+          snapshot: Json
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          order_item_id: string
+          reason: string
+          returned_at?: string
+          returned_by?: string | null
+          snapshot: Json
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          order_item_id?: string
+          reason?: string
+          returned_at?: string
+          returned_by?: string | null
+          snapshot?: Json
+        }
+        Relationships: []
+      }
       units: {
         Row: {
           address: string | null
@@ -2064,6 +2094,7 @@ export type Database = {
     }
     Functions: {
       get_user_company_id: { Args: never; Returns: string }
+      return_result_for_correction: { Args: { _reason: string; _result_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

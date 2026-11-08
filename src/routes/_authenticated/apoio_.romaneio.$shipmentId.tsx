@@ -7,7 +7,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/apoio_/romaneio/$shipmentId")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Romaneio de envio — LIS" }] }),
+  head: () => ({ meta: [{ title: "Romaneio de envio — DFLAB" }] }),
   component: ManifestPage,
 });
 

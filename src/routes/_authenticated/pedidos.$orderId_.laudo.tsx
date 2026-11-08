@@ -12,7 +12,7 @@ import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId_/laudo")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Laudo — LIS" }] }),
+  head: () => ({ meta: [{ title: "Laudo — DFLAB" }] }),
   component: LaudoPage,
 });
 

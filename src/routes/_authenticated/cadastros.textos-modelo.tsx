@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 type Template = { id: string; title: string; body: string; exam_id: string | null };
 
 export const Route = createFileRoute("/_authenticated/cadastros/textos-modelo")({
-  head: () => ({ meta: [{ title: "Textos-modelo — LIS" }] }),
+  head: () => ({ meta: [{ title: "Textos-modelo — DFLAB" }] }),
   component: TextosModeloPage,
 });
 

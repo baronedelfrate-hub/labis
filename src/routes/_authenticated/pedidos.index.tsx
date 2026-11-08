@@ -14,7 +14,7 @@ type View = "todos" | "prontos" | "andamento" | "entregues";
 const today = () => new Date().toISOString().slice(0, 10);
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
-  head: () => ({ meta: [{ title: "Pedidos — LIS" }] }),
+  head: () => ({ meta: [{ title: "Pedidos — DFLAB" }] }),
   // visao: todos | prontos (finalizados, prontos para entrega) | andamento. data vazia = todas as datas.
   validateSearch: (s: Record<string, unknown>): { visao?: View; data?: string } => ({
     visao: s.visao === "prontos" || s.visao === "andamento" || s.visao === "entregues" ? s.visao : undefined,

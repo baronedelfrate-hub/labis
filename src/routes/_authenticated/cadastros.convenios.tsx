@@ -11,7 +11,7 @@ import { LegacyInsurancePicker } from "@/components/LegacyExamCatalog";
 type Insurance = { id: string; code: string; name: string; price_table_id: string; active: boolean; tiss_codigo_ans: string | null; tiss_tabela: string | null };
 
 export const Route = createFileRoute("/_authenticated/cadastros/convenios")({
-  head: () => ({ meta: [{ title: "Convênios — LIS" }] }),
+  head: () => ({ meta: [{ title: "Convênios — DFLAB" }] }),
   component: InsurancePage,
 });
 

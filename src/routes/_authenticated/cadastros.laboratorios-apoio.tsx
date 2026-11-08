@@ -15,7 +15,7 @@ import { toast } from "sonner";
 type Lab = { id: string; name: string; legacy_code: string | null; contact: string | null; phone: string | null; email: string | null; turnaround_days: number | null; notes: string | null; active: boolean };
 
 export const Route = createFileRoute("/_authenticated/cadastros/laboratorios-apoio")({
-  head: () => ({ meta: [{ title: "Laboratórios de apoio — LIS" }] }),
+  head: () => ({ meta: [{ title: "Laboratórios de apoio — DFLAB" }] }),
   component: SupportLabsPage,
 });
 

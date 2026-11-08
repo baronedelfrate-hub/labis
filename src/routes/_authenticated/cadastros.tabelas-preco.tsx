@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useCompanyId } from "@/hooks/useCompanyId";
 
 export const Route = createFileRoute("/_authenticated/cadastros/tabelas-preco")({
-  head: () => ({ meta: [{ title: "Tabelas de preço — LIS" }] }),
+  head: () => ({ meta: [{ title: "Tabelas de preço — DFLAB" }] }),
   component: PriceTablesPage,
 });
 

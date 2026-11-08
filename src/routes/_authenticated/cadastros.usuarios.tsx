@@ -29,7 +29,7 @@ const ROLE_LABEL: Record<Role, string> = {
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros/usuarios")({
-  head: () => ({ meta: [{ title: "Usuários — LIS" }] }),
+  head: () => ({ meta: [{ title: "Usuários — DFLAB" }] }),
   component: UsersPage,
 });
 

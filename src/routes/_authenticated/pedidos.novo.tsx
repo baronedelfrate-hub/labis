@@ -18,7 +18,7 @@ import { useCompanyId } from "@/hooks/useCompanyId";
 import { Cid10Combobox } from "@/components/Cid10Combobox";
 
 export const Route = createFileRoute("/_authenticated/pedidos/novo")({
-  head: () => ({ meta: [{ title: "Novo pedido — LIS" }] }),
+  head: () => ({ meta: [{ title: "Novo pedido — DFLAB" }] }),
   component: NewOrder,
 });
 

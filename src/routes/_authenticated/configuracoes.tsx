@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
     if (!data) throw redirect({ to: "/dashboard" });
   },
-  head: () => ({ meta: [{ title: "Configurações — LIS" }] }),
+  head: () => ({ meta: [{ title: "Configurações — DFLAB" }] }),
   component: SettingsPage,
 });
 

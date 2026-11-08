@@ -2,20 +2,22 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  FlaskConical, ClipboardList, TestTube2, Barcode, Calculator, ShieldCheck, FileText, Wallet,
+  ClipboardList, TestTube2, Barcode, Calculator, ShieldCheck, FileText, Wallet,
   Smartphone, Building2, Users, Check, ArrowRight, Share2, Library, Printer, Truck, Layers, CircleHelp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BRAND } from "@/lib/brand";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LabIS — Sistema para laboratório de análises clínicas" },
+      { title: `${BRAND} — Sistema para laboratório de análises clínicas` },
       { name: "description", content: "Do pedido ao laudo: coleta com código de barras, resultados com valores de pânico e campos calculados, liberação, portal do paciente, faturamento de convênios e app no celular." },
-      { property: "og:title", content: "LabIS — Sistema para laboratório de análises clínicas" },
+      { property: "og:title", content: `${BRAND} — Sistema para laboratório de análises clínicas` },
       { property: "og:description", content: "Pedidos, coleta, resultados, laudos, portal do paciente e financeiro em um só lugar. Funciona no computador e no celular." },
-      { property: "og:image", content: "/landing/dashboard-d.webp" },
+      { property: "og:image", content: "https://dflab.online/og-image.png" },
     ],
   }),
   component: Landing,
@@ -104,8 +106,8 @@ function Landing() {
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <a href="#topo" className="flex items-center gap-2 font-semibold">
-            <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-4" /></span>
-            LabIS
+            <LogoMark size={32} />
+            <LogoWordmark className="text-lg" />
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#recursos" className="hover:text-foreground">Recursos</a>
@@ -132,7 +134,7 @@ function Landing() {
               </div>
               <p className="mt-3 text-xs text-muted-foreground">Novo por aqui? <Link to="/auth" search={{ aba: "criar" }} className="underline">Crie a conta e teste</Link> com a base inicial já pronta.</p>
             </div>
-            <Shot src="/landing/dashboard-d.webp" alt="Painel do dia do LabIS" priority />
+            <Shot src="/landing/dashboard-d.webp" alt={`Painel do dia do ${BRAND}`} priority />
           </div>
         </section>
 
@@ -153,7 +155,7 @@ function Landing() {
         <section id="telas" className="scroll-mt-16 border-y bg-muted/40">
           <div className="mx-auto max-w-6xl px-4 py-14">
             <h2 className="text-2xl font-semibold sm:text-3xl">Veja o sistema por dentro</h2>
-            <p className="mt-2 max-w-2xl text-muted-foreground">Telas reais do LabIS. Os nomes e valores nas imagens são fictícios.</p>
+            <p className="mt-2 max-w-2xl text-muted-foreground">Telas reais do {BRAND}. Os nomes e valores nas imagens são fictícios.</p>
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               {shots.map(s => (
                 <figure key={s.src}>
@@ -171,7 +173,7 @@ function Landing() {
               <div className="mb-3 grid size-10 place-items-center rounded-md bg-primary/10 text-primary"><Smartphone className="size-5" /></div>
               <h2 className="text-2xl font-semibold sm:text-3xl">Feito para o celular também</h2>
               <p className="mt-2 text-muted-foreground">
-                Abra no navegador do celular e use “Adicionar à tela inicial”. O LabIS vira um aplicativo, com menu lateral que se adapta à tela pequena.
+                Abra no navegador do celular e use “Adicionar à tela inicial”. O {BRAND} vira um aplicativo, com menu lateral que se adapta à tela pequena.
                 Ideal para a coleta, para conferir resultados e acompanhar o movimento fora do laboratório.
               </p>
               <ul className="mt-4 space-y-2 text-sm">
@@ -219,7 +221,7 @@ function Landing() {
       </main>
 
       <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} LabIS — Sistema de informação laboratorial
+        © {new Date().getFullYear()} {BRAND} — Sistema de informação laboratorial
       </footer>
     </div>
   );

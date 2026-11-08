@@ -30,7 +30,7 @@ function ConselhoSelect({ value, onChange }: { value: string | null; onChange: (
 }
 
 export const Route = createFileRoute("/_authenticated/cadastros/medicos")({
-  head: () => ({ meta: [{ title: "Médicos — LIS" }] }),
+  head: () => ({ meta: [{ title: "Médicos — DFLAB" }] }),
   component: () => (
     <CrudPage<Doctor>
       title="Médicos" description="Cadastro de médicos solicitantes" table="doctors"

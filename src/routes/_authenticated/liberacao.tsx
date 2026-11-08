@@ -30,7 +30,7 @@ function FlagBadge({ flag }: { flag: ResultFlag }) {
 }
 
 export const Route = createFileRoute("/_authenticated/liberacao")({
-  head: () => ({ meta: [{ title: "Liberação — LIS" }] }),
+  head: () => ({ meta: [{ title: "Liberação — DFLAB" }] }),
   component: LiberacaoPage,
 });
 

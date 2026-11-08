@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useMyRoles } from "@/hooks/useMyRoles";
-import { LogoMark, LogoWordmark } from "@/components/Logo";
+import { LogoFull } from "@/components/Logo";
 import { useSupportSummary } from "@/hooks/useSupportReturns";
 import { HelpButton } from "@/components/HelpButton";
 
@@ -82,8 +82,7 @@ function AuthedLayout() {
   const sidebar = (
       <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex items-center gap-2 border-b border-sidebar-border">
-          <LogoMark size={28} />
-          <LogoWordmark onDark className="text-lg" />
+          <LogoFull dark height={48} />
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1 text-sm">
           {nav.map(item => (
@@ -187,8 +186,7 @@ function AuthedLayout() {
           <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMenuOpen(true)} aria-label="Abrir menu">
             <Menu className="size-5" />
           </Button>
-          <LogoMark size={28} />
-          <LogoWordmark onDark className="text-lg" />
+          <LogoFull dark height={36} />
         </header>
         <main className="flex-1 min-w-0 overflow-x-hidden pb-20 print:pb-0">
           <Outlet />

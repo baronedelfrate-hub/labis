@@ -28,3 +28,18 @@ export function LogoWordmark({ onDark = false, className }: { onDark?: boolean; 
     </span>
   );
 }
+
+// Logo completo (símbolo + nome + "Sistema laboratorial"). `dark` usa a versão para fundo escuro.
+// Os arquivos ficam em public/ (logo.svg e logo-dark.svg); a proporção é 3,4 de largura para 1 de altura.
+export function LogoFull({ height = 40, dark = false, className }: { height?: number; dark?: boolean; className?: string }) {
+  return (
+    <img
+      src={dark ? "/logo-dark.svg" : "/logo.svg"}
+      alt={BRAND}
+      height={height}
+      width={Math.round(height * 3.4)}
+      style={{ height, width: "auto" }}
+      className={`block shrink-0 ${className ?? ""}`}
+    />
+  );
+}

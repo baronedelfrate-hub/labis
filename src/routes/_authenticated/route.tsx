@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
-  FlaskConical, LayoutDashboard, ClipboardList, Plus, Users, Stethoscope,
+  LayoutDashboard, ClipboardList, Plus, Users, Stethoscope,
   ShieldCheck, Building2, Tags, TestTubes, Layers, LogOut, ChevronRight, UserCog,
   Beaker, ClipboardCheck, CheckCheck, Settings, Wallet, Landmark, Receipt, Menu, FileText, Truck, Send,
 } from "lucide-react";
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useMyRoles } from "@/hooks/useMyRoles";
-import { BRAND } from "@/lib/brand";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { useSupportSummary } from "@/hooks/useSupportReturns";
 import { HelpButton } from "@/components/HelpButton";
 
@@ -82,8 +82,8 @@ function AuthedLayout() {
   const sidebar = (
       <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
         <div className="px-4 py-4 flex items-center gap-2 border-b border-sidebar-border">
-          <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
-          <span className="font-semibold">{BRAND}</span>
+          <LogoMark size={28} />
+          <LogoWordmark onDark className="text-lg" />
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-1 text-sm">
           {nav.map(item => (
@@ -187,8 +187,8 @@ function AuthedLayout() {
           <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMenuOpen(true)} aria-label="Abrir menu">
             <Menu className="size-5" />
           </Button>
-          <div className="rounded-md bg-sidebar-primary p-1.5"><FlaskConical className="size-4" /></div>
-          <span className="font-semibold">{BRAND}</span>
+          <LogoMark size={28} />
+          <LogoWordmark onDark className="text-lg" />
         </header>
         <main className="flex-1 min-w-0 overflow-x-hidden pb-20 print:pb-0">
           <Outlet />

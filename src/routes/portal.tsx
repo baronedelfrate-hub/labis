@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setPortalToken } from "@/lib/portal-session";
 import { BRAND } from "@/lib/brand";
-import { FlaskConical, KeyRound, Lock, FileText, ShieldCheck, Clock, HelpCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
+import { KeyRound, Lock, FileText, ShieldCheck, Clock, HelpCircle, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 // Mantém só letras e números (sem I/O/0/1 confundíveis não é garantido aqui) e coloca o traço depois de 4 caracteres.
 function formatCode(v: string) {
@@ -112,9 +113,9 @@ function PortalLoginPage() {
           </>
         ) : (
           <>
-            <span className="grid size-9 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-5" /></span>
+            <LogoMark size={36} />
             <div className="leading-tight">
-              <div className="font-semibold">{BRAND}</div>
+              <LogoWordmark className="block text-base" />
               <div className="text-xs text-muted-foreground">Portal do paciente</div>
             </div>
           </>

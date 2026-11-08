@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  FlaskConical, ClipboardList, TestTube2, Barcode, Calculator, ShieldCheck, FileText, Wallet,
+  ClipboardList, TestTube2, Barcode, Calculator, ShieldCheck, FileText, Wallet,
   Smartphone, Building2, Users, Check, ArrowRight, Share2, Library, Printer, Truck, Layers, CircleHelp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
+import { LogoMark, LogoWordmark } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Do pedido ao laudo: coleta com código de barras, resultados com valores de pânico e campos calculados, liberação, portal do paciente, faturamento de convênios e app no celular." },
       { property: "og:title", content: `${BRAND} — Sistema para laboratório de análises clínicas` },
       { property: "og:description", content: "Pedidos, coleta, resultados, laudos, portal do paciente e financeiro em um só lugar. Funciona no computador e no celular." },
-      { property: "og:image", content: "/landing/dashboard-d.webp" },
+      { property: "og:image", content: "https://dflab.online/og-image.png" },
     ],
   }),
   component: Landing,
@@ -105,8 +106,8 @@ function Landing() {
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <a href="#topo" className="flex items-center gap-2 font-semibold">
-            <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground"><FlaskConical className="size-4" /></span>
-            {BRAND}
+            <LogoMark size={32} />
+            <LogoWordmark className="text-lg" />
           </a>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#recursos" className="hover:text-foreground">Recursos</a>

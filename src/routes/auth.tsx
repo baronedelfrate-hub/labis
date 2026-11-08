@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { BRAND } from "@/lib/brand";
+import { BRAND, LOGIN_BG } from "@/lib/brand";
 import { LogoMark, LogoWordmark } from "@/components/Logo";
 
 export const Route = createFileRoute("/auth")({
@@ -53,16 +53,18 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="hidden lg:flex flex-col justify-between bg-sidebar text-sidebar-foreground p-12">
+      <div className="relative isolate hidden lg:flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground p-12">
+        <img src={LOGIN_BG} alt="" aria-hidden="true" className="absolute inset-0 -z-20 h-full w-full object-cover object-right-bottom" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-br from-[#04232c]/95 via-[#04232c]/45 to-transparent" />
         <div className="flex items-center gap-3">
           <LogoMark size={40} />
           <LogoWordmark onDark className="text-2xl" />
         </div>
-        <div className="space-y-3">
+        <div className="mt-14 max-w-md space-y-3">
           <h1 className="text-3xl font-semibold leading-tight">Sistema de informação para laboratórios de análises clínicas</h1>
           <p className="text-sm text-sidebar-foreground/70 max-w-md">Gestão de pedidos, coletas, convênios e catálogo de exames — tudo em um só lugar.</p>
         </div>
-        <p className="text-xs text-sidebar-foreground/50">© {new Date().getFullYear()} {BRAND}</p>
+        <p className="mt-auto text-xs text-sidebar-foreground/50">© {new Date().getFullYear()} {BRAND}</p>
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">

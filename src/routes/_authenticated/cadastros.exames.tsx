@@ -14,6 +14,7 @@ import { SupportLabFields } from "@/components/SupportLabFields";
 import { toast } from "sonner";
 import { formatAgeMonths } from "@/lib/exam-parameters";
 import { validateFormula, findFormulaCycle } from "@/lib/formula";
+import { DuplicateExamButton } from "@/components/DuplicateExam";
 import { LegacyCatalogPicker, LegacyPricesSection } from "@/components/LegacyExamCatalog";
 
 type Exam = { id: string; code: string; name: string; sector: string | null; tech_sector: string | null; price_sector: string | null; support_lab_id: string | null; material: string | null; deadline_days: number; fasting_hours: number; is_urgent_allowed: boolean; preparation_instructions: string | null; tiss_codigo_procedimento: string | null; default_method: string | null; standard_notes: string | null; is_text: boolean; samples_count: number; labels_per_sample: number };
@@ -98,6 +99,7 @@ function ExamesPage() {
 
           {value.id && (
             <>
+              <div className="flex justify-end"><DuplicateExamButton examId={value.id} code={value.code ?? ""} name={value.name ?? ""} /></div>
               <LegacyPricesSection examId={value.id} code={value.code} />
               <ParametersSection examId={value.id} />
               <ReferenceRangesSection examId={value.id} />

@@ -26,11 +26,14 @@ type Props<T extends { id: string }> = {
   emptyValue: Partial<T>;
   itemLabel?: (row: T) => string;
   reopenOnCreate?: boolean;
+  // Executa antes de excluir (pode apagar dependências ou lançar um erro com o motivo do bloqueio)
+  beforeDelete?: (row: T) => Promise<void>;
+  deleteNote?: string;
 };
 
 export function CrudPage<T extends { id: string }>({
   title, description, table, select = "*", orderBy, searchColumn, searchPlaceholder,
-  columns, renderForm, emptyValue, itemLabel, reopenOnCreate,
+  columns, renderForm, emptyValue, itemLabel, reopenOnCreate, beforeDelete, deleteNote,
 }: Props<T>) {
   const qc = useQueryClient();
   const companyId = useCompanyId();
@@ -81,6 +84,7 @@ export function CrudPage<T extends { id: string }>({
 
   const del = useMutation({
     mutationFn: async (id: string) => {
+      if (beforeDelete && deleting) await beforeDelete(deleting);
       const { error } = await supabase.from(table as never).delete().eq("id", id);
       if (error) throw error;
     },
@@ -150,7 +154,10 @@ export function CrudPage<T extends { id: string }>({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir registro?</AlertDialogTitle>
-            <AlertDialogDescription>{deleting && itemLabel ? itemLabel(deleting) : "Esta ação não pode ser desfeita."}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {deleting && itemLabel ? itemLabel(deleting) : "Esta ação não pode ser desfeita."}
+              {deleteNote && <span className="block mt-2">{deleteNote}</span>}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { deletePatientOrdersIfSafe } from "@/lib/order-deletion";
 
 type Patient = { id: string; code: string; name: string; birth_date: string | null; sex: "M" | "F" | "O" | null; cpf: string | null; phone: string | null; email: string | null };
 
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/cadastros/pacientes")({
       searchColumn="name" searchPlaceholder="Buscar por nome..."
       emptyValue={{ name: "", cpf: "", phone: "", email: "", birth_date: null, sex: null }}
       itemLabel={(r) => r.name}
+      beforeDelete={(r) => deletePatientOrdersIfSafe(r.id)}
+      deleteNote="Se o paciente tiver pedidos ainda sem coleta, eles também serão excluídos. Paciente com coleta ou resultado não pode ser excluído."
       columns={[
         { key: "code", label: "Código", className: "tabular-nums w-24" },
         { key: "name", label: "Nome" },

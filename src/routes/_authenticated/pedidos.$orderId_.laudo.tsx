@@ -152,6 +152,8 @@ function LaudoPage() {
     const lab = (i as any).exam?.support_lab?.name;
     if (lab) apoioByLab.set(lab, [...(apoioByLab.get(lab) ?? []), (i as any).exam?.code]);
   }
+  const showPrev = simpleItems.some((i: any) => data.previousByExam.get(i.exam_id));
+  const showObs = simpleItems.some((i: any) => resultByItem.get(i.id)?.observation);
   const labName = s.legal_name || branding?.name || "—";
   const portalBase = typeof window !== "undefined" ? `${window.location.origin}/portal` : "/portal";
   const portalLink = branding?.slug ? `${portalBase}?lab=${branding.slug}` : portalBase;
@@ -163,19 +165,26 @@ function LaudoPage() {
     <div className="laudo-root bg-muted/30 min-h-screen">
       <style>{`
         @media print {
-          @page { size: A4; margin: 12mm; }
-          body { background: white !important; }
+          @page { size: A4; margin: 0; }
+          html, body, main, body * { --tw-bg-opacity: 1; }
+          html, body, main, #root, .laudo-root { background: white !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .laudo-toolbar, aside, nav { display: none !important; }
           .laudo-root { background: white !important; padding: 0 !important; min-height: auto !important; }
-          .laudo-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; padding: 0 !important; }
+          .laudo-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; max-width: none !important; width: 100% !important; padding: 0 12mm !important; }
+          .laudo-spacer { height: 11mm; }
+          .laudo-pagefoot { display: block !important; }
         }
-        .laudo-sheet { font-family: Inter, system-ui, sans-serif; color: #111; }
+        .laudo-pagefoot { display: none; position: fixed; left: 12mm; right: 12mm; bottom: 4mm; font-size: 8px; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 2px; }
+        .laudo-sheet { font-family: Inter, system-ui, sans-serif; color: #111; font-size: 11px; }
         .laudo-sheet table { border-collapse: collapse; width: 100%; }
-        .laudo-sheet th, .laudo-sheet td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; text-align: left; font-size: 12px; vertical-align: top; }
-        .laudo-sheet th { font-weight: 600; background: #f8fafc; }
+        .laudo-sheet .lx th, .laudo-sheet .lx td { padding: 2px 6px; border-bottom: 1px solid #eef0f3; text-align: left; font-size: 11px; line-height: 1.3; vertical-align: top; }
+        .laudo-sheet .lx th { font-weight: 600; font-size: 10px; color: #475569; border-bottom: 1px solid #94a3b8; }
         .laudo-sheet thead { display: table-header-group; }
-        .laudo-sheet tr { break-inside: avoid; page-break-inside: avoid; }
-        .laudo-sheet footer { break-inside: avoid; page-break-inside: avoid; }
+        .laudo-sheet tfoot { display: table-footer-group; }
+        .laudo-sheet .lx tr { break-inside: avoid; page-break-inside: avoid; }
+        .laudo-sheet footer, .laudo-sheet .lx-block-head { break-inside: avoid; page-break-inside: avoid; }
+        .laudo-sheet .lx-block-head { break-after: avoid; }
       `}</style>
       <div className="laudo-toolbar sticky top-0 z-10 border-b bg-background/95 backdrop-blur px-6 py-3 flex items-center gap-2">
         <Button variant="outline" size="sm" asChild><Link to="/pedidos/$orderId" params={{ orderId }}><ArrowLeft className="size-4 mr-1" />Voltar</Link></Button>
@@ -183,25 +192,26 @@ function LaudoPage() {
           <Button size="sm" onClick={() => window.print()}><Printer className="size-4 mr-1" />Imprimir / Salvar como PDF</Button>
         </div>
       </div>
-      <div className="laudo-sheet mx-auto my-6 bg-white shadow-sm border max-w-[210mm] p-8">
-        <header className="flex items-start gap-4 border-b pb-4">
-          {logoUrl && <img src={logoUrl} alt="Logo" className="max-h-20 max-w-[140px] object-contain" />}
+      <div className="laudo-sheet mx-auto my-6 bg-white shadow-sm border max-w-[210mm] px-8 py-6">
+        <table><thead><tr><td className="laudo-spacer" style={{ padding: 0, border: 0 }} /></tr></thead><tfoot><tr><td className="laudo-spacer" style={{ padding: 0, border: 0, height: "11mm" }} /></tr></tfoot><tbody><tr><td style={{ padding: 0, border: 0 }}>
+        <header className="flex items-start gap-3 border-b-2 border-slate-700 pb-2">
+          {logoUrl && <img src={logoUrl} alt="Logo" className="max-h-14 max-w-[110px] object-contain" />}
           <div className="flex-1">
-            <div className="text-lg font-semibold">{labName}</div>
+            <div className="text-base font-bold uppercase tracking-wide">{labName}</div>
             <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
               {s.address && <div>{s.address}{s.city ? ` — ${s.city}` : ""}{s.state ? `/${s.state}` : ""}{s.zip_code ? ` — CEP ${s.zip_code}` : ""}</div>}
               <div>{s.phone && <span>Tel: {s.phone}</span>}{s.phone && s.email && " · "}{s.email && <span>{s.email}</span>}</div>
               <div>{s.cnpj && <span>CNPJ: {s.cnpj}</span>}{s.cnpj && s.cnes && " · "}{s.cnes && <span>CNES: {s.cnes}</span>}</div>
             </div>
           </div>
-          <div className="text-right text-xs">
-            <div className="font-medium text-sm">Laudo</div>
-            <div className="mt-1">Pedido #{o.order_number}</div>
+          <div className="text-right text-xs shrink-0">
+            <div className="font-semibold text-sm">LAUDO</div>
+            <div className="mt-0.5">Pedido <span className="font-semibold">#{o.order_number}</span></div>
           </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-x-6 gap-y-2 py-4 text-xs">
-          <Info k="Paciente" v={o.patient?.name} />
+        <section className="grid grid-cols-2 gap-x-6 gap-y-1 py-2 text-xs border-b">
+          <div className="col-span-2 text-sm"><span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-2">Paciente</span><span className="font-bold">{o.patient?.name || "—"}</span></div>
           <Info k="Código" v={o.patient?.code} />
           <Info k="CPF" v={o.patient?.cpf} />
           <Info k="Nascimento" v={o.patient?.birth_date ? new Date(o.patient.birth_date).toLocaleDateString("pt-BR") : "—"} />
@@ -213,7 +223,7 @@ function LaudoPage() {
 
         {simpleItems.length > 0 && (
           <section className="pt-2">
-            <table>
+            <table className="lx">
               <thead>
                 <tr>
                   <th style={{ width: "70px" }}>Código</th>
@@ -221,8 +231,8 @@ function LaudoPage() {
                   <th style={{ width: "110px" }}>Resultado</th>
                   <th style={{ width: "80px" }}>Unidade</th>
                   <th style={{ width: "130px" }}>Referência</th>
-                  <th style={{ width: "130px" }}>Anterior</th>
-                  <th>Observação</th>
+                  {showPrev && <th style={{ width: "130px" }}>Anterior</th>}
+                  {showObs && <th>Observação</th>}
                 </tr>
               </thead>
               <tbody>
@@ -238,10 +248,10 @@ function LaudoPage() {
                       <td className="tabular-nums font-medium"><FlaggedValue value={r.value} limits={limitsOf(r)} /></td>
                       <td>{r.unit ?? "—"}</td>
                       <td className="tabular-nums">{ref}</td>
-                      <td className="tabular-nums text-muted-foreground">
+                      {showPrev && <td className="tabular-nums text-muted-foreground">
                         {prev ? (<><div>{prev.value}{prev.unit ? ` ${prev.unit}` : ""}</div><div className="text-[10px]">{new Date(prev.released_at).toLocaleDateString("pt-BR")}</div></>) : "—"}
-                      </td>
-                      <td>{r.observation ?? ""}</td>
+                      </td>}
+                      {showObs && <td>{r.observation ?? ""}</td>}
                     </tr>
                   );
                 })}
@@ -288,7 +298,7 @@ function LaudoPage() {
           </section>
         )}
 
-        <footer className="mt-10 pt-4 border-t text-xs">
+        <footer className="mt-6 pt-3 border-t text-xs">
           <div className="flex items-end justify-between gap-4">
             <div>
               {s.footer_note && <div className="text-muted-foreground whitespace-pre-line mb-2">{s.footer_note}</div>}
@@ -305,7 +315,9 @@ function LaudoPage() {
             </div>
           </div>
         </footer>
+        </td></tr></tbody></table>
       </div>
+      <div className="laudo-pagefoot">{labName} · Laudo do pedido #{o.order_number} · Impresso em {new Date().toLocaleString("pt-BR")}</div>
     </div>
   );
 }
@@ -316,32 +328,32 @@ const EXTRA_LINE_STYLE = { fontStyle: "italic", fontSize: "11px", color: "#47556
 export function ExamBlock({ item, result, groups, releasedAt, collectionDate }: { item: any; result: any; groups: [string, any[]][]; releasedAt: Date; collectionDate: string | null }) {
   const reviewer = result.reviewer;
   return (
-    <section className="mt-6">
-      <div className="border-t-2 border-b bg-slate-50 px-3 py-2 flex flex-wrap gap-x-6 gap-y-1 text-xs">
-        <div><span className="font-semibold">{item.exam?.code}</span> · <span className="font-semibold">{item.exam?.name}</span></div>
+    <section className="mt-4">
+      <div className="lx-block-head border-b-2 border-slate-700 px-1 pb-1 flex flex-wrap items-baseline gap-x-5 gap-y-0.5 text-[11px]">
+        <div className="text-[13px] font-bold uppercase">{item.exam?.name} <span className="text-[10px] font-normal text-muted-foreground">({item.exam?.code})</span></div>
         {item.exam?.material && <div><span className="text-muted-foreground">Material:</span> {item.exam.material}</div>}
         {item.exam?.support_lab?.name && <div className="text-xs"><span className="text-muted-foreground">Exame realizado pelo laboratório de apoio:</span> {item.exam.support_lab.name}</div>}
         {result.method && <div><span className="text-muted-foreground">Método:</span> {result.method}</div>}
         {collectionDate && <div><span className="text-muted-foreground">Coleta:</span> {new Date(collectionDate).toLocaleDateString("pt-BR")}</div>}
         <div><span className="text-muted-foreground">Liberação:</span> {new Date(result.released_at).toLocaleDateString("pt-BR")}</div>
       </div>
-      <table>
+      <table className="lx">
         <thead>
           <tr>
             <th>Parâmetro</th>
             <th style={{ width: "110px" }}>Resultado</th>
             <th style={{ width: "80px" }}>Unidade</th>
-            <th>Referência</th>
+            <th style={{ width: "36%" }}>Valor de referência</th>
           </tr>
         </thead>
         <tbody>
           {groups.flatMap(([groupLabel, values]) => [
-            ...(groupLabel ? [<tr key={`g-${groupLabel}`}><td colSpan={4} style={{ background: "#f1f5f9", fontWeight: 600 }}>{groupLabel}</td></tr>] : []),
+            ...(groupLabel ? [<tr key={`g-${groupLabel}`}><td colSpan={4} style={{ fontStyle: "italic", fontWeight: 600, paddingTop: 6 }}>{groupLabel}</td></tr>] : []),
             ...values.flatMap((v: any) => [
               ...(v.extra_before ? [<tr key={`${v.id}-b`}><td colSpan={4} style={EXTRA_LINE_STYLE}>{v.extra_before}</td></tr>] : []),
               <tr key={v.id}>
                 <td>{v.parameter?.name ?? "—"}</td>
-                <td className="tabular-nums font-medium"><FlaggedValue value={v.value} limits={limitsOf(v)} /></td>
+                <td className="tabular-nums font-bold"><FlaggedValue value={v.value} limits={limitsOf(v)} /></td>
                 <td>{v.unit ?? v.parameter?.unit ?? "—"}</td>
                 <td>{v.reference_display_text ?? "—"}</td>
               </tr>,
@@ -369,8 +381,8 @@ export function ExamBlock({ item, result, groups, releasedAt, collectionDate }: 
 function Info({ k, v }: { k: string; v?: string | null }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{k}</div>
-      <div className="font-medium">{v || "—"}</div>
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-1.5">{k}</span>
+      <span className="font-medium">{v || "—"}</span>
     </div>
   );
 }

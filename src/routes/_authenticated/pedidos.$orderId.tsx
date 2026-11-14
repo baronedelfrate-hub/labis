@@ -5,7 +5,7 @@ import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2, ClipboardEdit } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2, ClipboardEdit, ListPlus } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -24,6 +24,7 @@ import { createPortalAccess, getPortalAccessInfo } from "@/lib/portal.functions"
 import { cn } from "@/lib/utils";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { useMyRoles } from "@/hooks/useMyRoles";
+import { EditOrderExamsDialog } from "@/components/EditOrderExamsDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
@@ -57,8 +58,9 @@ function OrderDetail() {
   const [payOpen, setPayOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [deliverOpen, setDeliverOpen] = useState(false);
+  const [editExamsOpen, setEditExamsOpen] = useState(false);
   const navigate = useNavigate();
-  const { canEnterResults } = useMyRoles();
+  const { canEnterResults, isAdmin, isRecepcao } = useMyRoles();
   const qcOrder = useQueryClient();
   const undoDelivery = useMutation({
     mutationFn: async () => {
@@ -86,7 +88,7 @@ function OrderDetail() {
         payment_status, billing_batch_id, insurance_plan_id, delivered_at, delivered_to,
         patient:patients(id,code,name,cpf,birth_date),
         doctor:doctors(id,name,crm,crm_uf),
-        insurance:insurance_plans(id,name,is_particular),
+        insurance:insurance_plans(id,name,is_particular,price_table_id),
         unit:units(id,name)
       `,
         )
@@ -153,6 +155,12 @@ function OrderDetail() {
                 Etiquetas
               </Link>
             </Button>
+            {(isAdmin || isRecepcao) && o.status !== "cancelado" && !o.billing_batch_id && (
+              <Button variant="outline" onClick={() => setEditExamsOpen(true)}>
+                <ListPlus className="size-4 mr-1" />
+                Editar exames
+              </Button>
+            )}
             {isParticular && (
               <Button variant="secondary" onClick={() => setPayOpen(true)} disabled={balance <= 0}>
                 <DollarSign className="size-4 mr-1" />
@@ -421,6 +429,16 @@ function OrderDetail() {
         companyId={o.company_id}
         suggested={balance}
         nextInstallment={(data.payments as any[]).length + 1}
+      />
+      <EditOrderExamsDialog
+        open={editExamsOpen}
+        onOpenChange={setEditExamsOpen}
+        orderId={o.id}
+        companyId={o.company_id}
+        priceTableId={(o.insurance as any)?.price_table_id ?? null}
+        items={data.items as any}
+        resultItemIds={new Set((data.results as any[]).map((r) => r.order_item_id))}
+        orderStatus={o.status}
       />
       <PortalAccessDialog
         open={portalOpen}

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { CrudPage, Field } from "@/components/CrudPage";
 import { Input } from "@/components/ui/input";
@@ -56,7 +57,7 @@ function PatientHistory({ patientId }: { patientId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, order_number, order_date, status, order_items(exam:exams(code,name))")
+        .select("id, order_number, daily_code, order_date, status, order_items(exam:exams(code,name))")
         .eq("patient_id", patientId)
         .order("order_date", { ascending: false })
         .limit(50);
@@ -79,7 +80,7 @@ function PatientHistory({ patientId }: { patientId: string }) {
             className="block rounded border bg-card px-3 py-2 hover:bg-accent transition-colors"
           >
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-mono font-medium">#{o.order_number}</span>
+              <span className="font-mono font-medium">{orderRef(o)}</span>
               <span className="text-muted-foreground">{o.order_date ? new Date(o.order_date).toLocaleDateString("pt-BR") : "—"}</span>
               <Badge variant="outline" className="ml-auto text-[10px]">{o.status}</Badge>
             </div>

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/portal-laudo")({
         const { data: order, error: oe } = await supabaseAdmin
           .from("orders")
           .select(`
-            id, order_number, order_date, collection_date, status, company_id, patient_id,
+            id, order_number, daily_code, order_date, collection_date, status, company_id, patient_id,
             patient:patients(name,code,cpf,birth_date,sex),
             doctor:doctors(name,crm,crm_uf),
             insurance:insurance_plans(name),

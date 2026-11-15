@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -35,7 +36,7 @@ function LaudoPage() {
     refetchOnMount: "always",
     queryFn: async () => {
       const { data: order, error } = await supabase.from("orders").select(`
-        id, order_number, order_date, collection_date, status, company_id, patient_id,
+        id, order_number, daily_code, order_date, collection_date, status, company_id, patient_id,
         patient:patients(name,code,cpf,birth_date,sex),
         doctor:doctors(name,crm,crm_uf),
         insurance:insurance_plans(name),
@@ -207,7 +208,7 @@ function LaudoPage() {
           </div>
           <div className="text-right text-xs shrink-0">
             <div className="font-semibold text-sm">LAUDO</div>
-            <div className="mt-0.5">Pedido <span className="font-semibold">#{o.order_number}</span></div>
+            <div className="mt-0.5">Pedido <span className="font-semibold">{orderRef(o)}</span></div>
           </div>
         </header>
 
@@ -319,7 +320,7 @@ function LaudoPage() {
         </footer>
         </td></tr></tbody></table>
       </div>
-      <div className="laudo-pagefoot">{labName} · Laudo do pedido #{o.order_number} · Impresso em {new Date().toLocaleString("pt-BR")}</div>
+      <div className="laudo-pagefoot">{labName} · Laudo do pedido {orderRef(o)} · Impresso em {new Date().toLocaleString("pt-BR")}</div>
     </div>
   );
 }

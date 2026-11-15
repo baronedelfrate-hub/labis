@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatPatientAge } from "@/lib/age";
 import { supabase } from "@/integrations/supabase/client";
@@ -98,7 +99,7 @@ function NewOrder() {
         total_value: total,
         created_by: user.user?.id,
         company_id: companyId,
-      } as never).select("id, order_number").single();
+      } as never).select("id, order_number, daily_code").single();
       if (error) throw error;
       const rows = items.map(e => ({ order_id: order.id, exam_id: e.id, price: priceMap[e.id] ?? 0, company_id: companyId }));
       const { error: e2 } = await supabase.from("order_items").insert(rows);
@@ -106,7 +107,7 @@ function NewOrder() {
       return order;
     },
     onSuccess: (o) => {
-      toast.success(`Pedido #${o.order_number} criado`);
+      toast.success(`Pedido ${orderRef(o)} criado`);
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       navigate({ to: "/pedidos/$orderId", params: { orderId: o.id } });

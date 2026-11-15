@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -41,7 +42,7 @@ function ColetaPage() {
     queryFn: async () => {
       const { data: orders, error } = await supabase
         .from("orders")
-        .select("id, order_number, is_urgent, patient:patients(name,code), samples:samples(id,sample_number,material,material_seq,sector,status,rejection_reason,collected_at)")
+        .select("id, order_number, daily_code, is_urgent, patient:patients(name,code), samples:samples(id,sample_number,material,material_seq,sector,status,rejection_reason,collected_at)")
         .eq("order_date", date)
         .order("order_number", { ascending: false });
       if (error) throw error;
@@ -191,7 +192,7 @@ function ColetaPage() {
             return (
               <section key={o.id} className="rounded-md border bg-card p-4">
                 <header className="flex flex-wrap items-center gap-3 mb-3">
-                  <div className="font-semibold">#{o.order_number}</div>
+                  <div className="font-semibold">{orderRef(o)}</div>
                   <div className="text-sm">{o.patient?.name} <span className="text-muted-foreground">· {o.patient?.code}</span></div>
                   {o.is_urgent && <Badge className="bg-warning text-warning-foreground">Urgente</Badge>}
                   {hasRecoleta && <Badge className="bg-red-100 text-red-900"><AlertTriangle className="size-3 mr-1" />Recoleta</Badge>}

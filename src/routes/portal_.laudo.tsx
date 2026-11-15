@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, LogOut } from "lucide-react";
 import { getPortalToken, setPortalToken } from "@/lib/portal-session";
+import { formatPatientAge } from "@/lib/age";
 import { FlaggedValue, limitsOf } from "@/components/FlaggedValue";
 import { TextExamBlock } from "@/components/TextExamBlock";
 
@@ -98,6 +99,7 @@ function PortalLaudoPage() {
           <Info k="Código" v={o.patient?.code} />
           <Info k="CPF" v={o.patient?.cpf} />
           <Info k="Nascimento" v={o.patient?.birth_date ? new Date(o.patient.birth_date).toLocaleDateString("pt-BR") : "—"} />
+          <Info k="Idade" v={formatPatientAge(o.patient?.birth_date, o.order_date)} />
           <Info k="Médico solicitante" v={o.doctor?.name ? `${o.doctor.name} — CRM ${o.doctor.crm}/${o.doctor.crm_uf}` : "—"} />
           <Info k="Convênio" v={o.insurance?.name ?? "Particular"} />
           <Info k="Data de coleta" v={o.collection_date ? new Date(o.collection_date).toLocaleDateString("pt-BR") : "—"} />

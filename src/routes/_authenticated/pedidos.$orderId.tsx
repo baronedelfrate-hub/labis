@@ -24,6 +24,7 @@ import { createPortalAccess, getPortalAccessInfo } from "@/lib/portal.functions"
 import { cn } from "@/lib/utils";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { useMyRoles } from "@/hooks/useMyRoles";
+import { formatPatientAge } from "@/lib/age";
 import { EditOrderExamsDialog } from "@/components/EditOrderExamsDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deleteOrders, orderDeleteBlockers } from "@/lib/order-deletion";
@@ -254,7 +255,7 @@ function OrderDetail() {
       />
       <PageBody>
         <div className="grid gap-4 md:grid-cols-2 mb-6">
-          <Info title="Paciente" main={patient?.name} sub={`${patient?.code} · ${patient?.cpf ?? "sem CPF"}`} />
+          <Info title="Paciente" main={patient?.name} sub={[patient?.code, patient?.cpf ?? "sem CPF", formatPatientAge((patient as any)?.birth_date, o.order_date)].filter(Boolean).join(" · ")} />
           <Info title="Médico" main={doctor?.name ?? "—"} sub={doctor ? `CRM ${doctor.crm}/${doctor.crm_uf}` : ""} />
           <Info title="Convênio" main={insurance?.name ?? "Particular"} sub={(o as { cid10_code?: string | null }).cid10_code ? `CID-10: ${(o as { cid10_code?: string | null }).cid10_code}` : undefined} />
           <Info

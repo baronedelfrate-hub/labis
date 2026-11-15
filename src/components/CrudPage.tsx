@@ -28,12 +28,14 @@ type Props<T extends { id: string }> = {
   reopenOnCreate?: boolean;
   // Executa antes de excluir (pode apagar dependências ou lançar um erro com o motivo do bloqueio)
   beforeDelete?: (row: T) => Promise<void>;
+  // Executa antes de salvar (novo ou edição); lance um erro para impedir o salvamento
+  beforeSave?: (value: Partial<T>) => Promise<void>;
   deleteNote?: string;
 };
 
 export function CrudPage<T extends { id: string }>({
   title, description, table, select = "*", orderBy, searchColumn, searchPlaceholder,
-  columns, renderForm, emptyValue, itemLabel, reopenOnCreate, beforeDelete, deleteNote,
+  columns, renderForm, emptyValue, itemLabel, reopenOnCreate, beforeDelete, beforeSave, deleteNote,
 }: Props<T>) {
   const qc = useQueryClient();
   const companyId = useCompanyId();
@@ -57,6 +59,7 @@ export function CrudPage<T extends { id: string }>({
 
   const save = useMutation({
     mutationFn: async (v: Partial<T>) => {
+      if (beforeSave) await beforeSave(v);
       const { id, ...rest } = v as { id?: string } & Record<string, unknown>;
       if (id) {
         const { error } = await supabase.from(table as never).update(rest as never).eq("id", id);
@@ -79,7 +82,7 @@ export function CrudPage<T extends { id: string }>({
         setEditing(null);
       }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message.includes("patients_company_cpf_key") ? "Já existe um paciente com este CPF." : e.message),
   });
 
   const del = useMutation({

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Printer, LogOut } from "lucide-react";
@@ -90,7 +91,7 @@ function PortalLaudoPage() {
           </div>
           <div className="text-right text-xs">
             <div className="font-medium text-sm">Laudo</div>
-            <div className="mt-1">Pedido #{o.order_number}</div>
+            <div className="mt-1">Pedido {orderRef(o)}</div>
           </div>
         </header>
 

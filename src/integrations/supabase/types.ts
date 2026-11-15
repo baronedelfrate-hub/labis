@@ -788,6 +788,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          daily_code: string | null
+          daily_seq: number | null
           billing_batch_id: string | null
           collection_date: string | null
           company_id: string
@@ -813,6 +815,8 @@ export type Database = {
           cid10_code: string | null
         }
         Insert: {
+          daily_code?: string | null
+          daily_seq?: number | null
           billing_batch_id?: string | null
           collection_date?: string | null
           company_id: string
@@ -838,6 +842,8 @@ export type Database = {
           cid10_code?: string | null
         }
         Update: {
+          daily_code?: string | null
+          daily_seq?: number | null
           billing_batch_id?: string | null
           collection_date?: string | null
           company_id?: string

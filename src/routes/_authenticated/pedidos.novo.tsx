@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { findPatientByCpf, cpfDuplicateMessage, isCpfUniqueError } from "@/lib/cpf";
 import { formatPatientAge } from "@/lib/age";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
@@ -98,7 +100,7 @@ function NewOrder() {
         total_value: total,
         created_by: user.user?.id,
         company_id: companyId,
-      } as never).select("id, order_number").single();
+      } as never).select("id, order_number, daily_code").single();
       if (error) throw error;
       const rows = items.map(e => ({ order_id: order.id, exam_id: e.id, price: priceMap[e.id] ?? 0, company_id: companyId }));
       const { error: e2 } = await supabase.from("order_items").insert(rows);
@@ -106,7 +108,7 @@ function NewOrder() {
       return order;
     },
     onSuccess: (o) => {
-      toast.success(`Pedido #${o.order_number} criado`);
+      toast.success(`Pedido ${orderRef(o)} criado`);
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       navigate({ to: "/pedidos/$orderId", params: { orderId: o.id } });
@@ -373,13 +375,17 @@ function NewPatientDialog({ open, onOpenChange, onCreated }: { open: boolean; on
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyId) return toast.error("Sem empresa");
+    try {
+      const dup = await findPatientByCpf(form.cpf);
+      if (dup) return toast.error(cpfDuplicateMessage(dup) + " Busque por ele na seleção de paciente.");
+    } catch (err: any) { return toast.error(err.message ?? "Erro ao verificar o CPF"); }
     const { data, error } = await supabase.from("patients").insert({
       name: form.name, birth_date: form.birth_date || null,
       sex: (form.sex || null) as "M" | "F" | "O" | null,
       cpf: form.cpf || null, phone: form.phone || null,
       company_id: companyId,
     } as never).select("id,code,name,cpf").single();
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(isCpfUniqueError(error) ? "Já existe um paciente com este CPF." : error.message);
     onCreated(data);
     qc.invalidateQueries({ queryKey: ["patient-search"] });
     onOpenChange(false);

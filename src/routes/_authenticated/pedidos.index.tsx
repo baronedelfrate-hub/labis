@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
@@ -65,7 +66,7 @@ function Orders() {
     queryFn: async () => {
       let q = supabase
         .from("orders")
-        .select("id, order_number, order_date, status, is_urgent, total_value, payment_status, delivered_at, patient:patients!inner(id,name,code)")
+        .select("id, order_number, daily_code, order_date, status, is_urgent, total_value, payment_status, delivered_at, patient:patients!inner(id,name,code)")
         .order("order_date", { ascending: false })
         .order("order_number", { ascending: false })
         .limit(LIMIT);
@@ -73,7 +74,7 @@ function Orders() {
       else if (view === "entregues") q = q.not("delivered_at", "is", null);
       else if (view === "andamento") q = q.in("status", ["aberto", "coletado", "em_analise"]);
       if (searching) {
-        if (/^\d+$/.test(term)) q = q.eq("order_number", Number(term));
+        if (/^\d+$/.test(term)) q = term.length >= 9 ? q.ilike("daily_code", `%${term}%`) : q.or(`order_number.eq.${Number(term)},daily_code.ilike.${term}%`);
         else q = q.ilike("patient.name", `%${term}%`);
       } else if (date) q = q.eq("order_date", date);
       const { data, error } = await q;
@@ -129,7 +130,7 @@ function Orders() {
                 const p = o.patient as { name: string; code: string } | null;
                 return (
                   <TableRow key={o.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate({ to: "/pedidos/$orderId", params: { orderId: o.id } })}>
-                    <TableCell className="font-medium tabular-nums">#{o.order_number}</TableCell>
+                    <TableCell className="font-medium tabular-nums">{orderRef(o)}</TableCell>
                     <TableCell className="tabular-nums text-muted-foreground">{String(o.order_date).split("-").reverse().join("/")}</TableCell>
                     <TableCell>{p?.name} <span className="text-muted-foreground text-xs">({p?.code})</span></TableCell>
                     <TableCell><Badge variant="outline" className={cn(statusStyle[o.status])}>{o.status === "finalizado" && o.delivered_at ? "Entregue" : (statusLabel[o.status] ?? o.status)}</Badge></TableCell>

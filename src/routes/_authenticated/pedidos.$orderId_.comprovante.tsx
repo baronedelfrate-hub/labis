@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ function ComprovantePage() {
     staleTime: 0,
     queryFn: async () => {
       const { data: order, error } = await supabase.from("orders").select(`
-        id,order_number,order_date,total_value,payment_status,company_id,
+        id,order_number,daily_code,order_date,total_value,payment_status,company_id,
         patient:patients(name,code,cpf),
         insurance:insurance_plans(name)
       `).eq("id", orderId).single();
@@ -87,7 +88,7 @@ function ComprovantePage() {
           </div>
           <div className="text-right">
             <div className="text-lg font-semibold">COMPROVANTE DE PAGAMENTO</div>
-            <div className="text-sm">Pedido nº {o.order_number}</div>
+            <div className="text-sm">Pedido nº {orderRef(o).replace("#", "")}</div>
             <div className="text-xs text-gray-600">Emitido em {new Date().toLocaleString("pt-BR")}</div>
           </div>
         </header>

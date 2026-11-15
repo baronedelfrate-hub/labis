@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ function EtiquetasPage() {
     queryFn: async () => {
       const { data: order, error } = await supabase
         .from("orders")
-        .select("id, order_number, order_date, is_urgent, patient:patients(name, birth_date)")
+        .select("id, order_number, daily_code, order_date, is_urgent, patient:patients(name, birth_date)")
         .eq("id", orderId)
         .single();
       if (error) throw error;
@@ -127,7 +128,7 @@ function EtiquetasPage() {
             <Link to="/pedidos/$orderId" params={{ orderId }}><ArrowLeft className="size-4 mr-1" />Voltar ao pedido</Link>
           </Button>
           <div className="text-sm text-muted-foreground">
-            {data ? `Pedido #${data.order.order_number} — ${printList.length} etiqueta(s)` : ""}
+            {data ? `Pedido ${orderRef(data.order)} — ${printList.length} etiqueta(s)` : ""}
           </div>
           <Button size="sm" className="ml-auto" onClick={() => window.print()} disabled={printList.length === 0}>
             <Printer className="size-4 mr-1" />Imprimir etiquetas

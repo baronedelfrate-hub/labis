@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { CrudPage, Field } from "@/components/CrudPage";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { findPatientByCpf, cpfDuplicateMessage } from "@/lib/cpf";
 import { deletePatientOrdersIfSafe } from "@/lib/order-deletion";
 
 type Patient = { id: string; code: string; name: string; birth_date: string | null; sex: "M" | "F" | "O" | null; cpf: string | null; phone: string | null; email: string | null };
@@ -19,6 +21,10 @@ export const Route = createFileRoute("/_authenticated/cadastros/pacientes")({
       emptyValue={{ name: "", cpf: "", phone: "", email: "", birth_date: null, sex: null }}
       itemLabel={(r) => r.name}
       beforeDelete={(r) => deletePatientOrdersIfSafe(r.id)}
+      beforeSave={async (v) => {
+        const dup = await findPatientByCpf(v.cpf, v.id);
+        if (dup) throw new Error(cpfDuplicateMessage(dup));
+      }}
       deleteNote="Se o paciente tiver pedidos ainda sem coleta, eles também serão excluídos. Paciente com coleta ou resultado não pode ser excluído."
       columns={[
         { key: "code", label: "Código", className: "tabular-nums w-24" },
@@ -56,7 +62,7 @@ function PatientHistory({ patientId }: { patientId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, order_number, order_date, status, order_items(exam:exams(code,name))")
+        .select("id, order_number, daily_code, order_date, status, order_items(exam:exams(code,name))")
         .eq("patient_id", patientId)
         .order("order_date", { ascending: false })
         .limit(50);
@@ -79,7 +85,7 @@ function PatientHistory({ patientId }: { patientId: string }) {
             className="block rounded border bg-card px-3 py-2 hover:bg-accent transition-colors"
           >
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-mono font-medium">#{o.order_number}</span>
+              <span className="font-mono font-medium">{orderRef(o)}</span>
               <span className="text-muted-foreground">{o.order_date ? new Date(o.order_date).toLocaleDateString("pt-BR") : "—"}</span>
               <Badge variant="outline" className="ml-auto text-[10px]">{o.status}</Badge>
             </div>

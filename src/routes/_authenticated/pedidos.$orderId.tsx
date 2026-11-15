@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -103,7 +104,7 @@ function OrderDetail() {
         .from("orders")
         .select(
           `
-        id, order_number, order_date, collection_date, status, is_urgent, total_value, notes, company_id, cid10_code,
+        id, order_number, daily_code, order_date, collection_date, status, is_urgent, total_value, notes, company_id, cid10_code,
         payment_status, billing_batch_id, insurance_plan_id, delivered_at, delivered_to,
         patient:patients(id,code,name,cpf,birth_date),
         doctor:doctors(id,name,crm,crm_uf),
@@ -164,7 +165,7 @@ function OrderDetail() {
   return (
     <>
       <PageHeader
-        title={`Pedido #${o.order_number}`}
+        title={`Pedido ${orderRef(o)}`}
         description={`Aberto em ${new Date(o.order_date).toLocaleDateString("pt-BR")}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -458,7 +459,7 @@ function OrderDetail() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir o pedido #{o.order_number}?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir o pedido {orderRef(o)}?</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteBlock
                 ? deleteBlock

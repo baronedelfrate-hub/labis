@@ -5,7 +5,7 @@ import { PageHeader, PageBody } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2, ClipboardEdit, ListPlus } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, FileText, DollarSign, Printer, KeyRound, Copy, PackageCheck, Undo2, ClipboardEdit, ListPlus, Trash2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { useCompanyBranding } from "@/hooks/useCompanyBranding";
 import { useMyRoles } from "@/hooks/useMyRoles";
 import { EditOrderExamsDialog } from "@/components/EditOrderExamsDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { deleteOrders, orderDeleteBlockers } from "@/lib/order-deletion";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/pedidos/$orderId")({
@@ -59,6 +61,7 @@ function OrderDetail() {
   const [portalOpen, setPortalOpen] = useState(false);
   const [deliverOpen, setDeliverOpen] = useState(false);
   const [editExamsOpen, setEditExamsOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const navigate = useNavigate();
   const { canEnterResults, isAdmin, isRecepcao } = useMyRoles();
   const qcOrder = useQueryClient();
@@ -74,6 +77,21 @@ function OrderDetail() {
       qcOrder.invalidateQueries({ queryKey: ["dashboard-prontos"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Erro ao desfazer a entrega"),
+  });
+  const deleteOrder = useMutation({
+    mutationFn: async () => { await deleteOrders([orderId]); },
+    onSuccess: () => {
+      toast.success("Pedido excluído");
+      qcOrder.invalidateQueries({ queryKey: ["orders"] });
+      qcOrder.invalidateQueries({ queryKey: ["dashboard-prontos"] });
+      navigate({ to: "/pedidos" });
+    },
+    onError: (e: any) => { toast.error(e.message ?? "Não foi possível excluir o pedido"); setDeleteOpen(false); },
+  });
+  const { data: deleteBlock } = useQuery({
+    queryKey: ["order-delete-block", orderId, deleteOpen],
+    enabled: deleteOpen,
+    queryFn: async () => (await orderDeleteBlockers([orderId])).get(orderId) ?? null,
   });
   const [portalCreds, setPortalCreds] = useState<{ public_code: string; pin: string } | null>(null);
 
@@ -159,6 +177,12 @@ function OrderDetail() {
               <Button variant="outline" onClick={() => setEditExamsOpen(true)}>
                 <ListPlus className="size-4 mr-1" />
                 Editar exames
+              </Button>
+            )}
+            {(isAdmin || isRecepcao) && (o.status === "aberto" || o.status === "cancelado") && !o.billing_batch_id && (
+              <Button variant="outline" className="text-destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="size-4 mr-1" />
+                Excluir pedido
               </Button>
             )}
             {isParticular && (
@@ -430,6 +454,24 @@ function OrderDetail() {
         suggested={balance}
         nextInstallment={(data.payments as any[]).length + 1}
       />
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir o pedido #{o.order_number}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteBlock
+                ? deleteBlock
+                : "O pedido, seus exames e as amostras pendentes serão apagados. Esta ação não pode ser desfeita. Só é possível enquanto não houver coleta, resultado ou pagamento."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={!!deleteBlock || deleteOrder.isPending} onClick={(e) => { e.preventDefault(); deleteOrder.mutate(); }}>
+              {deleteOrder.isPending ? "Excluindo..." : "Excluir pedido"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <EditOrderExamsDialog
         open={editExamsOpen}
         onOpenChange={setEditExamsOpen}

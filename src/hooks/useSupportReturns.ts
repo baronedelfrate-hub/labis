@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { computeDelay, delayRank, type Delay } from "@/lib/support-delay";
@@ -13,6 +14,7 @@ export type SupportReturn = {
   orderItemId: string;
   orderId: string | null;
   orderNumber: number | null;
+  orderRef: string;
   patientName: string;
   patientCode: string;
   examCode: string;
@@ -32,7 +34,7 @@ export function useSupportReturns() {
       const { data, error } = await supabase
         .from("support_shipment_items")
         .select(
-          "id, shipment:support_shipments!inner(id, number, sent_at, support_lab:support_labs(id, name, turnaround_days)), order_item:order_items!inner(id, status, exam:exams(code, name, deadline_days), order:orders!inner(id, order_number, status, patient:patients(name, code)))",
+          "id, shipment:support_shipments!inner(id, number, sent_at, support_lab:support_labs(id, name, turnaround_days)), order_item:order_items!inner(id, status, exam:exams(code, name, deadline_days), order:orders!inner(id, order_number, daily_code, status, patient:patients(name, code)))",
         )
         .eq("order_item.status", "coletado")
         .limit(2000);
@@ -58,6 +60,7 @@ export function useSupportReturns() {
           orderItemId: oi.id,
           orderId: order?.id ?? null,
           orderNumber: order?.order_number ?? null,
+          orderRef: orderRef(order),
           patientName: patient?.name ?? "",
           patientCode: patient?.code ?? "",
           examCode: exam?.code ?? "",

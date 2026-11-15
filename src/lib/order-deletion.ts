@@ -1,3 +1,4 @@
+import { orderRef } from "@/lib/order-ref";
 import { supabase } from "@/integrations/supabase/client";
 
 // Um pedido só pode ser excluído enquanto nada aconteceu com ele: sem coleta, sem resultado,
@@ -7,10 +8,10 @@ export async function orderDeleteBlockers(orderIds: string[]): Promise<Map<strin
   if (!orderIds.length) return blockers;
 
   const { data: orders, error } = await supabase.from("orders")
-    .select("id,order_number,status,billing_batch_id").in("id", orderIds);
+    .select("id,order_number,daily_code,status,billing_batch_id").in("id", orderIds);
   if (error) throw error;
-  const num = new Map((orders ?? []).map((o: any) => [o.id, o.order_number]));
-  const block = (id: string, why: string) => { if (!blockers.has(id)) blockers.set(id, `Pedido #${num.get(id) ?? "?"}: ${why}`); };
+  const num = new Map((orders ?? []).map((o: any) => [o.id, orderRef(o)]));
+  const block = (id: string, why: string) => { if (!blockers.has(id)) blockers.set(id, `Pedido ${num.get(id) ?? "?"}: ${why}`); };
 
   for (const o of (orders ?? []) as any[]) {
     if (o.billing_batch_id) block(o.id, "está em lote de convênio.");

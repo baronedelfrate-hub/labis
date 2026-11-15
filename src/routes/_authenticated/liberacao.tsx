@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -52,7 +53,7 @@ function LiberacaoPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("results")
-        .select("id, value, unit, reference_min, reference_max, panic_min, panic_max, observation, entered_at, order_item:order_items(id, exam:exams(code,name,sector,is_text), order:orders(id,order_number,patient:patients(name,code))), values:result_values(id, value, unit, reference_min, reference_max, panic_min, panic_max, reference_display_text, parameter:exam_parameters(name, display_order, group_label))")
+        .select("id, value, unit, reference_min, reference_max, panic_min, panic_max, observation, entered_at, order_item:order_items(id, exam:exams(code,name,sector,is_text), order:orders(id,order_number,daily_code,patient:patients(name,code))), values:result_values(id, value, unit, reference_min, reference_max, panic_min, panic_max, reference_display_text, parameter:exam_parameters(name, display_order, group_label))")
         .eq("released", false);
       if (error) throw error;
       return data ?? [];
@@ -76,11 +77,11 @@ function LiberacaoPage() {
   });
 
   const grouped = useMemo(() => {
-    const map = new Map<string, { order_number: number; patient: string; orderId: string; rows: any[]; panicCount: number }>();
+    const map = new Map<string, { order_number: number; daily_code: string | null; patient: string; orderId: string; rows: any[]; panicCount: number }>();
     for (const r of data as any[]) {
       const orderId = r.order_item?.order?.id;
       if (!orderId) continue;
-      const entry = map.get(orderId) ?? { order_number: r.order_item.order.order_number, patient: r.order_item.order.patient?.name, orderId, rows: [] as any[], panicCount: 0 };
+      const entry = map.get(orderId) ?? { order_number: r.order_item.order.order_number, daily_code: r.order_item.order.daily_code ?? null, patient: r.order_item.order.patient?.name, orderId, rows: [] as any[], panicCount: 0 };
       entry.rows.push(r);
       const flags: ResultFlag[] = (r.values ?? []).length
         ? (r.values as any[]).map((v) => getFlag(v.value, flagLimits(v)))
@@ -169,7 +170,7 @@ function LiberacaoPage() {
             return (
               <section key={g.orderId} className={cn("rounded-md border bg-card p-4", g.panicCount > 0 && "border-red-400 ring-1 ring-red-300")}>
                 <header className="flex items-center gap-3 mb-3 flex-wrap">
-                  <div className="font-semibold">#{g.order_number}</div>
+                  <div className="font-semibold">{orderRef(g)}</div>
                   <div className="text-sm text-muted-foreground">{g.patient}</div>
                   <Badge variant="outline">{g.rows.length} resultado(s)</Badge>
                   {g.panicCount > 0 && (
@@ -238,7 +239,7 @@ function LiberacaoPage() {
                         </div>
                         <div className="flex gap-2 sm:flex-col">
                           <Button size="sm" variant="outline" onClick={() => { if (confirmPanic(panicIn(r))) release.mutate({ ids: [r.id], reviewer: reviewer || null }); }} disabled={release.isPending}>Liberar</Button>
-                          <Button size="sm" variant="ghost" className="text-red-700 hover:text-red-800" onClick={() => { setReturnReason(""); setReturning({ id: r.id, label: `${ex?.code ?? ""} ${ex?.name ?? ""} (#${g.order_number})` }); }}><Undo2 className="mr-1 size-4" />Devolver</Button>
+                          <Button size="sm" variant="ghost" className="text-red-700 hover:text-red-800" onClick={() => { setReturnReason(""); setReturning({ id: r.id, label: `${ex?.code ?? ""} ${ex?.name ?? ""} (${orderRef(g)})` }); }}><Undo2 className="mr-1 size-4" />Devolver</Button>
                         </div>
                       </div>
                     );

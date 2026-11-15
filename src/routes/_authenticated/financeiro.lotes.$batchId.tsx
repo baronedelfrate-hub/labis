@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -33,7 +34,7 @@ function BatchDetail() {
         .eq("id", batchId).single();
       if (error) throw error;
       const { data: items } = await supabase.from("billing_batch_items")
-        .select("id,order_id,value,glosa_value,glosa_reason,glosa_codigo,glosa:tiss_glosa_codes(codigo,descricao),order:orders(order_number,order_date,total_value,patient:patients(name,code))")
+        .select("id,order_id,value,glosa_value,glosa_reason,glosa_codigo,glosa:tiss_glosa_codes(codigo,descricao),order:orders(order_number,daily_code,order_date,total_value,patient:patients(name,code))")
         .eq("billing_batch_id", batchId);
       const { data: payments } = await supabase.from("payments")
         .select("*").eq("billing_batch_id", batchId).order("paid_at");
@@ -108,7 +109,7 @@ function BatchDetail() {
             <TableBody>
               {data.items.map((i: any) => (
                 <TableRow key={i.id}>
-                  <TableCell className="tabular-nums">#{i.order?.order_number}</TableCell>
+                  <TableCell className="tabular-nums">{orderRef(i.order)}</TableCell>
                   <TableCell className="tabular-nums text-xs">{new Date(i.order?.order_date).toLocaleDateString("pt-BR")}</TableCell>
                   <TableCell>{i.order?.patient?.name}</TableCell>
                   <TableCell className="text-right tabular-nums">R$ {Number(i.value).toFixed(2)}</TableCell>

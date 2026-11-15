@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompanyId } from "@/hooks/useCompanyId";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/apoio_/romaneio/$shipmentI
 type Row = {
   id: string;
   order_item: {
-    order: { order_number: number; patient: { name: string; code: string; birth_date: string | null } | null } | null;
+    order: { order_number: number; daily_code?: string | null; patient: { name: string; code: string; birth_date: string | null } | null } | null;
     exam: { code: string; name: string; material: string | null } | null;
     sample: { sample_number: number; material: string | null } | null;
   } | null;
@@ -37,7 +38,7 @@ function ManifestPage() {
     queryKey: ["support-manifest", shipmentId],
     queryFn: async () => {
       const { data, error } = await supabase.from("support_shipments")
-        .select("id, number, sent_at, notes, support_lab:support_labs(name, contact, phone), support_shipment_items(id, order_item:order_items(order:orders(order_number, patient:patients(name, code, birth_date)), exam:exams(code, name, material), sample:samples!order_items_sample_id_fkey(sample_number, material)))")
+        .select("id, number, sent_at, notes, support_lab:support_labs(name, contact, phone), support_shipment_items(id, order_item:order_items(order:orders(order_number, daily_code, patient:patients(name, code, birth_date)), exam:exams(code, name, material), sample:samples!order_items_sample_id_fkey(sample_number, material)))")
         .eq("id", shipmentId).maybeSingle();
       if (error) throw error;
       return data as unknown as {
@@ -91,7 +92,7 @@ function ManifestPage() {
               return (
                 <tr key={r.id} className="border-b align-top">
                   <td className="p-1.5 tabular-nums">{i + 1}</td>
-                  <td className="p-1.5 tabular-nums">#{oi?.order?.order_number}</td>
+                  <td className="p-1.5 tabular-nums">{orderRef(oi?.order)}</td>
                   <td className="p-1.5">{oi?.order?.patient?.name}<div className="text-gray-500">{oi?.order?.patient?.code}{oi?.order?.patient?.birth_date ? ` · nasc. ${fmtBirth(oi.order.patient.birth_date)}` : ""}</div></td>
                   <td className="p-1.5"><b>{oi?.exam?.code}</b> {oi?.exam?.name}</td>
                   <td className="p-1.5">{oi?.sample?.material ?? oi?.exam?.material ?? ""}{oi?.sample ? ` · amostra nº ${oi.sample.sample_number}` : ""}</td>

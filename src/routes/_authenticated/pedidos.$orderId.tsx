@@ -491,7 +491,7 @@ function OrderDetail() {
           if (!v) setPortalCreds(null);
         }}
         orderId={o.id}
-        orderNumber={o.order_number}
+        orderNumber={orderRef(o)}
         patientName={patient?.name}
         creds={portalCreds}
         setCreds={setPortalCreds}
@@ -502,13 +502,13 @@ function OrderDetail() {
 
 const esc = (v: string) => v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 
-function printAccessVoucher(opts: { code: string; orderNumber: number; patientName?: string; portalUrl: string; labName?: string }) {
+function printAccessVoucher(opts: { code: string; orderNumber: string; patientName?: string; portalUrl: string; labName?: string }) {
   const win = window.open("", "_blank", "width=420,height=560");
   if (!win) return;
   win.document.write(`
     <html>
       <head>
-        <title>Acesso ao portal — Pedido #${opts.orderNumber}</title>
+        <title>Acesso ao portal — Pedido ${opts.orderNumber}</title>
         <style>
           body { font-family: Inter, system-ui, sans-serif; padding: 24px; color: #111; }
           .lab { font-size: 13px; font-weight: 600; margin: 0 0 10px; }
@@ -523,7 +523,7 @@ function printAccessVoucher(opts: { code: string; orderNumber: number; patientNa
       <body>
         ${opts.labName ? `<div class="lab">${esc(opts.labName)}</div>` : ""}
         <h1>Acesso ao laudo online</h1>
-        <div class="sub">Pedido #${opts.orderNumber}${opts.patientName ? " — " + esc(opts.patientName) : ""}</div>
+        <div class="sub">Pedido ${opts.orderNumber}${opts.patientName ? " — " + esc(opts.patientName) : ""}</div>
         <div class="url">${esc(opts.portalUrl)}</div>
         <div class="code">${opts.code}</div>
         <div class="note">
@@ -550,7 +550,7 @@ function PortalAccessDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   orderId: string;
-  orderNumber: number;
+  orderNumber: string;
   patientName?: string;
   creds: { public_code: string; pin: string } | null;
   setCreds: (v: { public_code: string; pin: string } | null) => void;

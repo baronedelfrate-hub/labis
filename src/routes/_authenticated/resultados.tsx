@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/resultados")({
 });
 
 const ITEM_SELECT =
-  "id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples!order_items_sample_id_fkey(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)";
+  "id, exam_id, exam:exams(id,code,name,sector,material,default_method,standard_notes,is_text,support_lab_id,support_lab:support_labs(name)), order:orders(id,order_number,daily_code,collection_date,patient:patients(name,code,birth_date,sex)), sample:samples!order_items_sample_id_fkey(status), links:order_item_samples(sample:samples(status)), support_shipment_items(id)";
 
 const isShipped = (r: any) => (Array.isArray(r.support_shipment_items) ? r.support_shipment_items.length > 0 : !!r.support_shipment_items);
 const sampleStatuses = (r: any): (string | undefined)[] => (r.links?.length ? r.links.map((l: any) => l.sample?.status) : [r.sample?.status]);
@@ -168,7 +169,7 @@ function ResultadosPage() {
   const needle = text.trim().replace(/^#/, "").toLowerCase();
   const matches = (r: any) =>
     !needle ||
-    [r.order?.patient?.name, r.order?.patient?.code, r.order?.order_number, r.exam?.code, r.exam?.name].some((v) =>
+    [r.order?.patient?.name, r.order?.patient?.code, r.order?.order_number, r.order?.daily_code, r.exam?.code, r.exam?.name].some((v) =>
       String(v ?? "").toLowerCase().includes(needle),
     );
   const filtered = (data as any[]).filter((r) => (sector === "__all__" || r.exam?.sector === sector) && matches(r));
@@ -223,7 +224,7 @@ function ResultadosPage() {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm">
             <span>
               {itemId ? "Mostrando só este exame" : "Mostrando só os exames deste pedido"}
-              {data[0]?.order ? <> · <b>#{data[0].order.order_number}</b> {data[0].order.patient?.name}</> : null}
+              {data[0]?.order ? <> · <b>{orderRef(data[0].order)}</b> {data[0].order.patient?.name}</> : null}
             </span>
             <span className="flex gap-2">
               {(orderId || data[0]?.order?.id) && (
@@ -497,7 +498,7 @@ function ResultItemCard({
     <div className={cn("rounded-md border bg-card p-4 space-y-3", panicItems.length > 0 && "border-red-400 ring-1 ring-red-300")}>
       <div className="flex flex-wrap items-start gap-4">
         <div className="text-sm flex-1 min-w-[180px]">
-          <div className="text-xs text-muted-foreground">#{item.order?.order_number} · {item.exam?.code}{item.exam?.support_lab?.name && <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-sky-900 dark:bg-sky-900/30 dark:text-sky-200">Apoio: {item.exam.support_lab.name}</span>}</div>
+          <div className="text-xs text-muted-foreground">{orderRef(item.order)} · {item.exam?.code}{item.exam?.support_lab?.name && <span className="ml-2 rounded bg-sky-100 px-1.5 py-0.5 text-sky-900 dark:bg-sky-900/30 dark:text-sky-200">Apoio: {item.exam.support_lab.name}</span>}</div>
           <div className="font-medium flex flex-wrap items-center gap-2">
             {item.exam?.name}
             {panicItems.length > 0 && (

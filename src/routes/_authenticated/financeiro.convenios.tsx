@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -91,7 +92,7 @@ function CreateBatchDialog({ insurance, companyId, onClose }: { insurance: { id:
     queryFn: async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id,order_number,order_date,total_value,patient:patients(name,code)")
+        .select("id,order_number,daily_code,order_date,total_value,patient:patients(name,code)")
         .eq("status", "finalizado")
         .is("billing_batch_id", null)
         .eq("insurance_plan_id", insurance.id)
@@ -159,7 +160,7 @@ function CreateBatchDialog({ insurance, companyId, onClose }: { insurance: { id:
                 {(orders ?? []).map((o: any) => (
                   <TableRow key={o.id}>
                     <TableCell><Checkbox checked={!!selected[o.id]} onCheckedChange={(v) => setSelected((s) => ({ ...s, [o.id]: !!v }))} /></TableCell>
-                    <TableCell className="tabular-nums">#{o.order_number}</TableCell>
+                    <TableCell className="tabular-nums">{orderRef(o)}</TableCell>
                     <TableCell className="tabular-nums text-xs">{new Date(o.order_date).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>{o.patient?.name}</TableCell>
                     <TableCell className="text-right tabular-nums">R$ {Number(o.total_value).toFixed(2)}</TableCell>

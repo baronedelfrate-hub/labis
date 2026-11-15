@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { orderRef } from "@/lib/order-ref";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/apoio")({
 
 type PendingItem = {
   id: string;
-  order: { id: string; order_number: number; patient: { name: string; code: string } | null } | null;
+  order: { id: string; order_number: number; daily_code?: string | null; patient: { name: string; code: string } | null } | null;
   exam: { id: string; code: string; name: string; material: string | null; support_lab_id: string } | null;
   sample: { sample_number: number; material: string | null } | null;
   support_shipment_items: unknown;
@@ -87,7 +88,7 @@ function ToSend() {
     queryFn: async (): Promise<PendingItem[]> => {
       const { data, error } = await supabase
         .from("order_items")
-        .select("id, order:orders!inner(id, order_number, status, patient:patients(name, code)), exam:exams!inner(id, code, name, material, support_lab_id), sample:samples!order_items_sample_id_fkey(sample_number, material), support_shipment_items(id)")
+        .select("id, order:orders!inner(id, order_number, daily_code, status, patient:patients(name, code)), exam:exams!inner(id, code, name, material, support_lab_id), sample:samples!order_items_sample_id_fkey(sample_number, material), support_shipment_items(id)")
         .eq("status", "coletado")
         .not("exam.support_lab_id", "is", null)
         .neq("order.status", "cancelado")
@@ -176,12 +177,12 @@ function ToSend() {
                   <TableRow key={i.id}>
                     <TableCell>
                       <Checkbox
-                        aria-label={`Incluir ${i.exam?.code} do pedido ${i.order?.order_number}`}
+                        aria-label={`Incluir ${i.exam?.code} do pedido ${orderRef(i.order)}`}
                         checked={!deselected.has(i.id)}
                         onCheckedChange={(v) => setDeselected((prev) => { const n = new Set(prev); if (v) n.delete(i.id); else n.add(i.id); return n; })}
                       />
                     </TableCell>
-                    <TableCell className="tabular-nums">#{i.order?.order_number}</TableCell>
+                    <TableCell className="tabular-nums">{orderRef(i.order)}</TableCell>
                     <TableCell>{i.order?.patient?.name} <span className="text-xs text-muted-foreground">({i.order?.patient?.code})</span></TableCell>
                     <TableCell><span className="font-mono tabular-nums mr-1">{i.exam?.code}</span>{i.exam?.name}</TableCell>
                     <TableCell className="text-muted-foreground">{i.sample ? `nº ${i.sample.sample_number}${i.sample.material ? ` · ${i.sample.material}` : ""}` : (i.exam?.material ?? "—")}</TableCell>
@@ -263,7 +264,7 @@ function AwaitingReturn() {
                 <TableCell><Badge variant="outline" className={cn("whitespace-nowrap", stateStyle[r.delay.state])}>{delayLabel(r.delay)}</Badge></TableCell>
                 <TableCell>{r.labName}</TableCell>
                 <TableCell className="tabular-nums">#{r.shipmentNumber}</TableCell>
-                <TableCell className="tabular-nums">#{r.orderNumber}</TableCell>
+                <TableCell className="tabular-nums">{r.orderRef}</TableCell>
                 <TableCell>{r.patientName} <span className="text-xs text-muted-foreground">({r.patientCode})</span></TableCell>
                 <TableCell><span className="font-mono tabular-nums mr-1">{r.examCode}</span>{r.examName}</TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">{new Date(r.sentAt).toLocaleDateString("pt-BR")}</TableCell>

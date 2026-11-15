@@ -100,7 +100,7 @@ function ColetaPage() {
       const codes = new Map<string, number>((sectors ?? []).map((x: any) => [x.sector as string, x.code as number]));
       const { data: rows, error } = await supabase
         .from("samples")
-        .select("id, sample_number, sector, material, material_seq, status, orders!inner(order_number, patient:patients(name))")
+        .select("id, sample_number, sector, material, material_seq, status, orders!inner(order_number, daily_code, patient:patients(name))")
         .in("sample_number", candidateSampleNumbers(parsed.sample)) // o código só tem 1 dígito de amostra (1 a 9)
         .eq("orders.order_number", parsed.orderSeq);
       if (error) throw error;
@@ -110,7 +110,7 @@ function ColetaPage() {
       const sameSector = found.filter((r) => sectorCodeFor(r.sector, codes) === parsed.sectorCode);
       const s = sameSector.find((r) => r.status !== "rejeitada") ?? sameSector[0] ?? found[0];
       const tube = found.filter((r) => r.material === s.material && r.status !== "rejeitada").length > 1 ? ` · tubo ${s.material_seq}` : "";
-      const who = `#${s.orders?.order_number} · ${s.orders?.patient?.name ?? ""} · ${s.material}${tube}${s.sector ? ` (${s.sector})` : ""}`;
+      const who = `${orderRef(s.orders)} · ${s.orders?.patient?.name ?? ""} · ${s.material}${tube}${s.sector ? ` (${s.sector})` : ""}`;
       if (sectorCodeFor(s.sector, codes) !== parsed.sectorCode) {
         throw new Error(`O setor do código (${String(parsed.sectorCode).padStart(2, "0")}) não confere com o da amostra (${s.sector ?? "sem setor"}). ${who}`);
       }

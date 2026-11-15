@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatPatientAge } from "@/lib/age";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/pedidos/novo")({
   component: NewOrder,
 });
 
-type Patient = { id: string; code: string; name: string; cpf: string | null };
+type Patient = { id: string; code: string; name: string; cpf: string | null; birth_date?: string | null };
 type Doctor = { id: string; name: string; crm: string; crm_uf: string };
 type Insurance = { id: string; name: string; price_table_id: string };
 type Exam = { id: string; code: string; name: string };
@@ -229,7 +230,7 @@ function PatientPicker({ value, onChange }: { value: Patient | null; onChange: (
   const { data = [] } = useQuery({
     queryKey: ["patient-search", q],
     queryFn: async () => {
-      let query = supabase.from("patients").select("id,code,name,cpf").order("name").limit(20);
+      let query = supabase.from("patients").select("id,code,name,cpf,birth_date").order("name").limit(20);
       if (q) query = query.or(`name.ilike.%${q}%,cpf.ilike.%${q}%,code.ilike.%${q}%`);
       const { data } = await query;
       return data ?? [];
@@ -239,7 +240,7 @@ function PatientPicker({ value, onChange }: { value: Patient | null; onChange: (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-          {value ? <span className="truncate">{value.name} <span className="text-muted-foreground text-xs">({value.code})</span></span> : "Buscar por nome, CPF ou código..."}
+          {value ? <span className="truncate">{value.name} <span className="text-muted-foreground text-xs">({value.code}{formatPatientAge(value.birth_date) ? ` · ${formatPatientAge(value.birth_date)}` : ""})</span></span> : "Buscar por nome, CPF ou código..."}
           <ChevronsUpDown className="size-4 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -251,7 +252,7 @@ function PatientPicker({ value, onChange }: { value: Patient | null; onChange: (
             <CommandGroup>
               {data.map(p => (
                 <CommandItem key={p.id} onSelect={() => { onChange(p); setOpen(false); }}>
-                  <div className="flex flex-col"><span>{p.name}</span><span className="text-xs text-muted-foreground">{p.code} · {p.cpf ?? "sem CPF"}</span></div>
+                  <div className="flex flex-col"><span>{p.name}</span><span className="text-xs text-muted-foreground">{[p.code, p.cpf ?? "sem CPF", formatPatientAge(p.birth_date)].filter(Boolean).join(" · ")}</span></div>
                 </CommandItem>
               ))}
             </CommandGroup>

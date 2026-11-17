@@ -1,3 +1,4 @@
+import { parseDateOnly } from "@/lib/dates";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +82,6 @@ function LotesList() {
 }
 
 function formatMonth(d: string) {
-  const dt = new Date(d);
+  const dt = parseDateOnly(d) ?? new Date();
   return dt.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }

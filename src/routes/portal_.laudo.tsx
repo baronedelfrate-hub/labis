@@ -198,7 +198,7 @@ function ExamBlock({ item, result, groups, collectionDate }: { item: any; result
         {item.exam?.material && <div><span className="text-muted-foreground">Material:</span> {item.exam.material}</div>}
         {item.exam?.support_lab?.name && <div className="text-xs"><span className="text-muted-foreground">Exame realizado pelo laboratório de apoio:</span> {item.exam.support_lab.name}</div>}
         {result.method && <div><span className="text-muted-foreground">Método:</span> {result.method}</div>}
-        {collectionDate && <div><span className="text-muted-foreground">Coleta:</span> {new Date(collectionDate).toLocaleDateString("pt-BR")}</div>}
+        {collectionDate && <div><span className="text-muted-foreground">Coleta:</span> {formatDateBR(collectionDate)}</div>}
         <div><span className="text-muted-foreground">Liberação:</span> {new Date(result.released_at).toLocaleDateString("pt-BR")}</div>
       </div>
       <table>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { formatDateBR } from "@/lib/dates";
+import { formatDateBR, parseDateOnly } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +70,7 @@ function BatchDetail() {
 
   return (
     <>
-      <PageHeader title={`Lote — ${b.insurance?.name}`} description={new Date(b.reference_month).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })} actions={
+      <PageHeader title={`Lote — ${b.insurance?.name}`} description={(parseDateOnly(b.reference_month) ?? new Date()).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })} actions={
         <div className="flex items-center gap-2">
           <Select value={b.status} onValueChange={(v) => updateStatus.mutate(v)}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>

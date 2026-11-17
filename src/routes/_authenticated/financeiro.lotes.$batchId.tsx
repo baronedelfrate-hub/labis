@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +111,7 @@ function BatchDetail() {
               {data.items.map((i: any) => (
                 <TableRow key={i.id}>
                   <TableCell className="tabular-nums">{orderRef(i.order)}</TableCell>
-                  <TableCell className="tabular-nums text-xs">{new Date(i.order?.order_date).toLocaleDateString("pt-BR")}</TableCell>
+                  <TableCell className="tabular-nums text-xs">{formatDateBR(i.order?.order_date)}</TableCell>
                   <TableCell>{i.order?.patient?.name}</TableCell>
                   <TableCell className="text-right tabular-nums">R$ {Number(i.value).toFixed(2)}</TableCell>
                   <TableCell className="text-right tabular-nums">R$ {Number(i.glosa_value || 0).toFixed(2)}</TableCell>

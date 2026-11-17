@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +98,15 @@ function LaudoPage() {
     load();
     return () => { cancelled = true; };
   }, [data?.settings?.logo_url]);
+
+  // O navegador usa o título da página como nome do arquivo ao salvar em PDF
+  const patientName = (data?.order as any)?.patient?.name as string | undefined;
+  useEffect(() => {
+    if (!patientName) return;
+    const prev = document.title;
+    document.title = `Laudo - ${patientName}`;
+    return () => { document.title = prev; };
+  }, [patientName]);
 
   if (loadError) {
     return (
@@ -216,11 +226,11 @@ function LaudoPage() {
           <div className="col-span-2 text-sm"><span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-2">Paciente</span><span className="font-bold">{o.patient?.name || "—"}</span></div>
           <Info k="Código" v={o.patient?.code} />
           <Info k="CPF" v={o.patient?.cpf} />
-          <Info k="Nascimento" v={o.patient?.birth_date ? new Date(o.patient.birth_date).toLocaleDateString("pt-BR") : "—"} />
+          <Info k="Nascimento" v={formatDateBR(o.patient?.birth_date)} />
           <Info k="Idade" v={formatPatientAge(o.patient?.birth_date, o.order_date)} />
           <Info k="Médico solicitante" v={o.doctor?.name ? `${o.doctor.name} — CRM ${o.doctor.crm}/${o.doctor.crm_uf}` : "—"} />
           <Info k="Convênio" v={o.insurance?.name ?? "Particular"} />
-          <Info k="Data de coleta" v={o.collection_date ? new Date(o.collection_date).toLocaleDateString("pt-BR") : "—"} />
+          <Info k="Data de coleta" v={formatDateBR(o.collection_date)} />
           <Info k="Data de emissão" v={releasedAt.toLocaleString("pt-BR")} />
         </section>
 

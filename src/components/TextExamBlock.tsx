@@ -1,3 +1,4 @@
+import { formatDateBR } from "@/lib/dates";
 // Bloco do laudo para exame tipo texto (resultado em texto livre, ex.: diagnóstico por imagem).
 // Mantém as quebras de linha e parágrafos do texto digitado.
 export function TextExamBlock({
@@ -10,7 +11,7 @@ export function TextExamBlock({
         <div><span className="font-semibold">{item.exam?.code}</span> · <span className="font-semibold">{item.exam?.name}</span></div>
         {item.exam?.material && <div><span className="text-muted-foreground">Material:</span> {item.exam.material}</div>}
         {result.method && <div><span className="text-muted-foreground">Método:</span> {result.method}</div>}
-        {collectionDate && <div><span className="text-muted-foreground">Coleta:</span> {new Date(collectionDate).toLocaleDateString("pt-BR")}</div>}
+        {collectionDate && <div><span className="text-muted-foreground">Coleta:</span> {formatDateBR(collectionDate)}</div>}
         {result.released_at && <div><span className="text-muted-foreground">Liberação:</span> {new Date(result.released_at).toLocaleDateString("pt-BR")}</div>}
       </div>
       <div className="px-3 py-3 text-sm whitespace-pre-wrap leading-relaxed">{result.value}</div>

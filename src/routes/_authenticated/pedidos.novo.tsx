@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { todayLocal } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { findPatientByCpf, cpfDuplicateMessage, isCpfUniqueError } from "@/lib/cpf";
@@ -41,7 +42,7 @@ function NewOrder() {
   const [insurance, setInsurance] = useState<Insurance | null>(null);
   const [unitId, setUnitId] = useState<string>("");
   const [isUrgent, setIsUrgent] = useState(false);
-  const [collectionDate, setCollectionDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [collectionDate, setCollectionDate] = useState<string>(todayLocal());
   const [items, setItems] = useState<Exam[]>([]);
   const [cid10, setCid10] = useState<string | null>(null);
   const [newPatientOpen, setNewPatientOpen] = useState(false);
@@ -97,6 +98,7 @@ function NewOrder() {
         is_urgent: isUrgent,
         cid10_code: cid10,
         collection_date: collectionDate || null,
+        order_date: todayLocal(),
         total_value: total,
         created_by: user.user?.id,
         company_id: companyId,

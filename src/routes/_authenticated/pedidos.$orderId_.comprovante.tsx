@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,7 +103,7 @@ function ComprovantePage() {
           <div>
             <div className="text-xs uppercase text-gray-500">Convênio</div>
             <div className="font-medium">{o.insurance?.name ?? "Particular"}</div>
-            <div className="text-xs text-gray-600">Data do pedido: {new Date(o.order_date).toLocaleDateString("pt-BR")}</div>
+            <div className="text-xs text-gray-600">Data do pedido: {formatDateBR(o.order_date)}</div>
           </div>
         </section>
 

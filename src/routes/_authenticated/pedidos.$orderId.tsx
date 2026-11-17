@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -166,7 +167,7 @@ function OrderDetail() {
     <>
       <PageHeader
         title={`Pedido ${orderRef(o)}`}
-        description={`Aberto em ${new Date(o.order_date).toLocaleDateString("pt-BR")}`}
+        description={`Aberto em ${formatDateBR(o.order_date)}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" asChild>
@@ -262,7 +263,7 @@ function OrderDetail() {
           <Info
             title="Unidade"
             main={unit?.name ?? "—"}
-            sub={o.collection_date ? `Coleta: ${new Date(o.collection_date).toLocaleDateString("pt-BR")}` : ""}
+            sub={o.collection_date ? `Coleta: ${formatDateBR(o.collection_date)}` : ""}
           />
         </div>
         <div className="flex flex-wrap gap-2 mb-4">

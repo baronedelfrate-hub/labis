@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { parseDateOnly } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -323,7 +324,7 @@ function ResultItemCard({
   onSaved: () => void;
 }) {
   const patient = item.order?.patient;
-  const collectionDate = item.order?.collection_date ? new Date(item.order.collection_date) : new Date();
+  const collectionDate = parseDateOnly(item.order?.collection_date) ?? new Date();
   const ageMonths = computeAgeMonths(patient?.birth_date, collectionDate);
   const sex = (patient?.sex as "M" | "F" | null) ?? null;
 

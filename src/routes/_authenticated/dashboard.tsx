@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { todayLocal } from "@/lib/dates";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader, PageBody } from "@/components/PageHeader";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const { data } = useQuery({
     queryKey: ["dashboard", today],
     queryFn: async () => {

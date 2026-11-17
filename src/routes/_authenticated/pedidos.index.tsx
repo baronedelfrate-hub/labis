@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { todayLocal } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,7 @@ import { Plus, Search, PackageCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type View = "todos" | "prontos" | "andamento" | "entregues";
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => todayLocal();
 
 export const Route = createFileRoute("/_authenticated/pedidos/")({
   head: () => ({ meta: [{ title: "Pedidos — DFLAB" }] }),

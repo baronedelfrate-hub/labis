@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery } from "@tanstack/react-query";
 import { CrudPage, Field } from "@/components/CrudPage";
@@ -86,7 +87,7 @@ function PatientHistory({ patientId }: { patientId: string }) {
           >
             <div className="flex items-center gap-2 text-xs">
               <span className="font-mono font-medium">{orderRef(o)}</span>
-              <span className="text-muted-foreground">{o.order_date ? new Date(o.order_date).toLocaleDateString("pt-BR") : "—"}</span>
+              <span className="text-muted-foreground">{formatDateBR(o.order_date)}</span>
               <Badge variant="outline" className="ml-auto text-[10px]">{o.status}</Badge>
             </div>
             <div className="text-xs text-muted-foreground mt-1 line-clamp-1">

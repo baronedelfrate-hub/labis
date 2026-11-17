@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { todayLocal } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +30,7 @@ const sampleBadge: Record<string, string> = {
 
 function ColetaPage() {
   const qc = useQueryClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const [date, setDate] = useState(today);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");

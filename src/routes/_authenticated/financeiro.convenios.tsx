@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -161,7 +162,7 @@ function CreateBatchDialog({ insurance, companyId, onClose }: { insurance: { id:
                   <TableRow key={o.id}>
                     <TableCell><Checkbox checked={!!selected[o.id]} onCheckedChange={(v) => setSelected((s) => ({ ...s, [o.id]: !!v }))} /></TableCell>
                     <TableCell className="tabular-nums">{orderRef(o)}</TableCell>
-                    <TableCell className="tabular-nums text-xs">{new Date(o.order_date).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell className="tabular-nums text-xs">{formatDateBR(o.order_date)}</TableCell>
                     <TableCell>{o.patient?.name}</TableCell>
                     <TableCell className="text-right tabular-nums">R$ {Number(o.total_value).toFixed(2)}</TableCell>
                   </TableRow>

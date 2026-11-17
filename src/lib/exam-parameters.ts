@@ -1,3 +1,4 @@
+import { parseDateOnly } from "@/lib/dates";
 // Helpers para exames com múltiplos parâmetros e referências por idade/sexo.
 
 export type ExamParameter = {
@@ -28,8 +29,8 @@ export type ReferenceRange = {
 
 export function computeAgeMonths(birthDate: string | null | undefined, at: Date = new Date()): number | null {
   if (!birthDate) return null;
-  const b = new Date(birthDate);
-  if (isNaN(b.getTime())) return null;
+  const b = parseDateOnly(birthDate);
+  if (!b) return null;
   let months = (at.getFullYear() - b.getFullYear()) * 12 + (at.getMonth() - b.getMonth());
   if (at.getDate() < b.getDate()) months -= 1;
   return Math.max(0, months);

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { formatDateBR } from "@/lib/dates";
 import { orderRef } from "@/lib/order-ref";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,14 @@ function PortalLaudoPage() {
       } finally { setLoading(false); }
     })();
   }, [navigate]);
+
+  const patientName = (data?.order as any)?.patient?.name as string | undefined;
+  useEffect(() => {
+    if (!patientName) return;
+    const prev = document.title;
+    document.title = `Laudo - ${patientName}`;
+    return () => { document.title = prev; };
+  }, [patientName]);
 
   if (loading || !data) return <div className="p-6 text-muted-foreground">Carregando...</div>;
 
@@ -99,11 +108,11 @@ function PortalLaudoPage() {
           <Info k="Paciente" v={o.patient?.name} />
           <Info k="Código" v={o.patient?.code} />
           <Info k="CPF" v={o.patient?.cpf} />
-          <Info k="Nascimento" v={o.patient?.birth_date ? new Date(o.patient.birth_date).toLocaleDateString("pt-BR") : "—"} />
+          <Info k="Nascimento" v={formatDateBR(o.patient?.birth_date)} />
           <Info k="Idade" v={formatPatientAge(o.patient?.birth_date, o.order_date)} />
           <Info k="Médico solicitante" v={o.doctor?.name ? `${o.doctor.name} — CRM ${o.doctor.crm}/${o.doctor.crm_uf}` : "—"} />
           <Info k="Convênio" v={o.insurance?.name ?? "Particular"} />
-          <Info k="Data de coleta" v={o.collection_date ? new Date(o.collection_date).toLocaleDateString("pt-BR") : "—"} />
+          <Info k="Data de coleta" v={formatDateBR(o.collection_date)} />
           <Info k="Data de emissão" v={releasedAt.toLocaleString("pt-BR")} />
         </section>
 
